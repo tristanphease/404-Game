@@ -3,3 +3,6 @@ Plan for 404 game:
 doors into different rooms
 doors have patterns based on what's in the rooms
 game descends into glitchy effects?
+
+actual game thing:
+magic casting -ice, fire, light
