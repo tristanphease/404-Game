@@ -1,14 +1,16 @@
 import {getRandomInt, context} from "./game.js";
 import Point from "./point.js";
 
-function Spell() {
+export const SPELL_SIZE = 300; 
+
+function Spell(colour) {
+    this.colour = colour;
     this.generatePoints();
 }
 
-Spell.prototype.draw = function() {
-    
-}
-
+/**
+ * Generates points and associated useful stuff
+ */
 Spell.prototype.generatePoints = function() {
     //have box of 300x300
     this.pointNum = 3;
@@ -53,6 +55,9 @@ Spell.prototype.generatePoints = function() {
     
 }
 
+/**
+ * gets the bounding box
+ */
 function getBoundingBox(points) {
     let minX = Number.MAX_SAFE_INTEGER;
     let minY = Number.MAX_SAFE_INTEGER;
@@ -87,7 +92,7 @@ function quadraticInterp(val0, val1, ctrl, t) {
 }
 
 function makePoint(min, max) {
-    return new Point(getRandomInt(0, 300), getRandomInt(0, 300));
+    return new Point(getRandomInt(0, SPELL_SIZE), getRandomInt(0, SPELL_SIZE));
 }
 
 /**
@@ -128,13 +133,17 @@ Spell.prototype.matches = function(points) {
     return dist;
 }
 
+/**
+ * draws the spell
+ */
 Spell.prototype.draw = function() {
+    //aliases to reduce clutter
     let p = this.points;
     let cp = this.controlPoints;
     
     let gradient = context.createLinearGradient(p[0].x, p[0].y, p[p.length-1].x, p[p.length-1].y);
     gradient.addColorStop(0, 'black');
-    gradient.addColorStop(1, 'red');
+    gradient.addColorStop(1, this.colour);
     
     context.beginPath();
     context.moveTo(p[0].x, p[0].y);
@@ -142,19 +151,24 @@ Spell.prototype.draw = function() {
         //context.bezierCurveTo(cp[2*i].x, cp[2*i].y, cp[2*i+1].x, cp[2*i+1].y, p[i].x, p[i].y);
         context.quadraticCurveTo(cp[i].x, cp[i].y, p[i].x, p[i].y);
     }
-    context.lineWidth = 3;
+    context.lineWidth = 10;
     context.strokeStyle = gradient;
     context.stroke();
+    
+    //debugging
+    //this.drawPoints();
 }
 
 /**
- * For debugging
+ * For debugging only
  */
 Spell.prototype.drawPoints = function() {
     context.fillStyle = "#000000";
+    let offsetX = this.points[0].x;
+    let offsetY = this.points[0].y;
     for (let i=0;i<this.curvePoints.length;i++) {
         context.beginPath();
-        context.arc(this.curvePoints[i].x, this.curvePoints[i].y, 10, 0, 2*Math.PI);
+        context.arc(this.curvePoints[i].x+offsetX, this.curvePoints[i].y+offsetY, 5, 0, 2*Math.PI);
         context.fill();
     }
 }
