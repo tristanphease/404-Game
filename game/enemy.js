@@ -12,6 +12,7 @@ Enemy.prototype.draw = function() {
     context.arc(this.x, this.y, this.size, 0, 2*Math.PI);
     context.fill();
     
+    //
 }
 
 

@@ -1,4 +1,5 @@
-import {context, deltaTime} from "./game.js";
+import {context} from "./game.js";
+import {deltaTime} from "./time.js";
 
 function SpellShot(x, y, colour) {
     this.x = x;

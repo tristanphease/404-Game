@@ -1,9 +1,11 @@
-import {context, spells, time} from "./game.js"; 
+import {context} from "./game.js";
+import {spells} from "./gamestate.js";
 import SpellShot from "./spellshot.js";
+import {time} from "./time.js";
 
-function Player(x, y) {
-    this.x = x;
-    this.y = y;
+function Player() {
+    this.x = 0;
+    this.y = 0;
     this.size = 40;
     this.maxHealth = 40;
     this.health = this.maxHealth;
@@ -12,6 +14,9 @@ function Player(x, y) {
     this.spellShots = [];
 }
 
+/**
+ * Generates the spell's vars related to drawing them
+ */
 Player.prototype.generateSpellVar = function(spell) {
     let obj = {};
     obj.speed = Math.random()*0.01;
@@ -22,6 +27,15 @@ Player.prototype.generateSpellVar = function(spell) {
 
 Player.prototype.draw = function() {
     context.translate(this.x, this.y);
+    
+    context.beginPath();
+    context.fillStyle = "#f5d742";
+    context.arc(0, 0, this.size, 0, 2*Math.PI);
+    context.strokeStyle = "#000000";
+    context.lineWidth = 3;
+    context.fillStyle = "#ffffff";
+    context.fill();
+    context.stroke();
     
     //simple thing, potentially try something more interesting later?
     context.lineWidth = 4;
@@ -39,12 +53,7 @@ Player.prototype.draw = function() {
         context.stroke();
     }
     
-    context.beginPath();
-    context.fillStyle = "#f5d742";
-    context.arc(0, 0, this.size, 0, 2*Math.PI);
-    context.strokeStyle = "#000000";
-    context.lineWidth = 3;
-    context.stroke();
+   
     
     context.translate(-this.x, -this.y);
     
@@ -70,6 +79,10 @@ Player.prototype.makeSpellShot = function(index) {
 Player.prototype.update = function() {
     for (let i=0;i<this.spellShots.length;i++) {
         this.spellShots[i].update();
+        if (this.spellShots[i].y < -this.spellShots[i].size) {
+            this.spellShots.splice(i, 1);
+            i--;
+        }
     }
 }
 

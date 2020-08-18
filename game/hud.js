@@ -1,4 +1,5 @@
-import {context, spells, PLAYER_SEPARATOR} from "./game.js";
+import {context, gameState, gameEnum} from "./game.js";
+import {spells, PLAYER_SEPARATOR} from "./gamestate.js";
 import {SPELL_SIZE} from "./spell.js";
 
 var hudVars = {};
@@ -13,22 +14,43 @@ const OFFSET = 10;
 const SPELL_HUD_SIZE = 100;
 const SPELL_HUD_OFFSET = 50;
 
+const PAUSE_BUTTON_SIZE = 205;
+const PAUSE_BUTTON_Y = 480;
+const PAUSE_SIZE = 40;
+
 function setHudInfo(infoObj) {
     Object.assign(hudVars, infoObj);
 }
 
 function insideSpell(x, y) {
+    let yNum = Math.floor((y-SPELL_HUD_OFFSET) / (SPELL_HUD_SIZE+OFFSET));
     //if x is in correct area
-    if (x >= OFFSET && x <= OFFSET + SPELL_HUD_SIZE) {
+    if (x >= OFFSET && x <= 2*(OFFSET + SPELL_HUD_SIZE)) {
         //if y is more than the top and less than the last spell
-        if (y >= SPELL_HUD_OFFSET && Math.floor((y-SPELL_HUD_OFFSET) / (SPELL_HUD_SIZE+OFFSET)) < spells.length) {
+        if (y >= SPELL_HUD_OFFSET && yNum < Math.floor((spells.length+1)/2)) {
             //if not in the gap between spells
             if ((y-SPELL_HUD_OFFSET) % (SPELL_HUD_SIZE+OFFSET) <= SPELL_HUD_SIZE) {
-                return Math.floor((y-SPELL_HUD_OFFSET) / (SPELL_HUD_SIZE+OFFSET));
+                
+                if (x <= OFFSET + SPELL_HUD_SIZE) {
+                    return yNum*2;
+                }
+                
+                if (x >= OFFSET*2 + SPELL_HUD_SIZE && (spells.length % 2 === 0 || yNum < (spells.length-1)/2)) {
+                    return yNum*2+1;
+                }
+                
             }
         }
     }
     return -1;
+}
+
+function insidePause(x, y) {
+    if (x >= OFFSET && x <= OFFSET + PAUSE_BUTTON_SIZE &&
+        y >= PAUSE_BUTTON_Y && y <= PAUSE_BUTTON_Y + PAUSE_BUTTON_SIZE) {
+        return true;
+    }
+    return false;
 }
 
 
@@ -38,13 +60,15 @@ function insideSpell(x, y) {
  */
 function drawHud() {
     //draw lines on HUD
-    context.beginPath();
-    context.lineWidth = 5;
-    context.strokeStyle = "#666666";
-    context.moveTo(HUD_WIDTH, PLAYER_SEPARATOR);
-    context.lineTo(window.innerWidth, PLAYER_SEPARATOR);
-    context.stroke();
-
+    if (gameState === gameEnum.GAME) {
+        context.beginPath();
+        context.lineWidth = 5;
+        context.strokeStyle = "#666666";
+        context.moveTo(HUD_WIDTH, PLAYER_SEPARATOR);
+        context.lineTo(window.innerWidth, PLAYER_SEPARATOR);
+        context.stroke();
+    }
+    
     context.beginPath();
     context.strokeStyle = "#000000";
     context.moveTo(HUD_WIDTH, 0);
@@ -64,15 +88,23 @@ function drawHud() {
     
     //draw spell hud elements
     for (let i=0;i<spells.length;i++) {
+        
+        let x = OFFSET;
+        let y = SPELL_HUD_OFFSET+Math.floor(i/2)*(SPELL_HUD_SIZE+OFFSET);
+        
+        if (i % 2 === 1) {
+            x += OFFSET + SPELL_HUD_SIZE;
+        }
+        
         //draw box outline
         context.beginPath();
         context.lineWidth = 5;
         context.strokeStyle = "#000000";
-        context.rect(OFFSET, SPELL_HUD_OFFSET+i*(SPELL_HUD_SIZE+OFFSET), SPELL_HUD_SIZE, SPELL_HUD_SIZE);
+        context.rect(x, y, SPELL_HUD_SIZE, SPELL_HUD_SIZE);
         context.stroke();
         
         //transform canvas for this
-        context.translate(OFFSET, SPELL_HUD_OFFSET+i*(SPELL_HUD_SIZE+OFFSET));
+        context.translate(x, y);
         //make it 100x100
         context.scale(SPELL_HUD_SIZE/SPELL_SIZE, SPELL_HUD_SIZE/SPELL_SIZE);
         
@@ -80,11 +112,36 @@ function drawHud() {
         
         //undo transformations
         context.scale(SPELL_SIZE/SPELL_HUD_SIZE, SPELL_SIZE/SPELL_HUD_SIZE);
-        context.translate(-OFFSET, -SPELL_HUD_OFFSET-i*(SPELL_HUD_SIZE+OFFSET));
+        context.translate(-x, -y);
     }
     
     //draw pause button on bottom left
+    context.beginPath();
+    context.rect(OFFSET, PAUSE_BUTTON_Y, PAUSE_BUTTON_SIZE, PAUSE_BUTTON_SIZE);
+    context.lineWidth = 10;
+    context.strokeStyle = "#000000";
+    context.stroke();
     
+    /*
+    context.beginPath();
+    context.fillStyle = "#7777ff";
+    context.rect(OFFSET+PAUSE_BUTTON_SIZE/3-PAUSE_SIZE/2, PAUSE_BUTTON_Y+40, PAUSE_SIZE, PAUSE_BUTTON_SIZE-80);
+    context.fill();
+    
+    context.rect(OFFSET+PAUSE_BUTTON_SIZE*2/3-PAUSE_SIZE/2, PAUSE_BUTTON_Y+40, PAUSE_SIZE, PAUSE_BUTTON_SIZE-80);
+    context.fill();*/
+    
+    context.beginPath();
+    context.fillStyle = "#77ff77";
+    //translate to centre to make it easier
+    context.translate(OFFSET + PAUSE_BUTTON_SIZE/2, PAUSE_BUTTON_Y + PAUSE_BUTTON_SIZE/2);
+    context.moveTo(-PAUSE_SIZE, PAUSE_SIZE);
+    context.lineTo(-PAUSE_SIZE, -PAUSE_SIZE);
+    context.lineTo(PAUSE_SIZE, 0);
+    context.closePath();
+    context.fill();
+    
+    context.translate(-OFFSET - PAUSE_BUTTON_SIZE/2, -PAUSE_BUTTON_Y - PAUSE_BUTTON_SIZE/2);
 }
 
 function drawOutline(index) {
@@ -108,4 +165,4 @@ function drawOutline(index) {
     context.globalAlpha = 1;
 }
 
-export {setHudInfo, drawHud, insideSpell, drawOutline};
+export {setHudInfo, drawHud, insideSpell, insidePause, drawOutline};
