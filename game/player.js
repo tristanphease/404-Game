@@ -25,6 +25,9 @@ Player.prototype.generateSpellVar = function(spell) {
     this.spellVar.push(obj);
 }
 
+/**
+ * Draws the player
+ */
 Player.prototype.draw = function() {
     context.translate(this.x, this.y);
     
@@ -63,6 +66,9 @@ Player.prototype.draw = function() {
     }
 }
 
+/**
+ * Checks if the coords given are inside the player
+ */
 Player.prototype.coordsInside = function(x, y) {
     //forgiving, should this be more precise?
     if (Math.hypot(this.x - x, this.y - y) <= this.size + 10) {
@@ -71,14 +77,21 @@ Player.prototype.coordsInside = function(x, y) {
     return false;
 }
 
+/**
+ * Makes a spell shot
+ */
 Player.prototype.makeSpellShot = function(index) {
     let spellshot = new SpellShot(this.x, this.y, spells[index].colour);
     this.spellShots.push(spellshot);
 }
 
+/**
+ * Updates the player which updates all its spell shots
+ */
 Player.prototype.update = function() {
     for (let i=0;i<this.spellShots.length;i++) {
         this.spellShots[i].update();
+        //if it's gone above the top, remove it
         if (this.spellShots[i].y < -this.spellShots[i].size) {
             this.spellShots.splice(i, 1);
             i--;

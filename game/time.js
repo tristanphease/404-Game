@@ -2,6 +2,7 @@ export var time;
 export var deltaTime;
 
 function startTime() {
+    
     time = performance.now();
 }
 
@@ -11,4 +12,8 @@ function updateTime() {
     time = newTime;
 }
 
-export {startTime, updateTime};
+function pauseTime() {
+    
+}
+
+export {startTime, updateTime, pauseTime};

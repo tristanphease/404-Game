@@ -1,14 +1,13 @@
-import {player, clamp, clearCanvas, getRandomInt, COLOURS, setPlayerPos} from "./game.js";
+import {player, clamp, clearCanvas, getRandomInt, COLOURS, WIDTH, HEIGHT, setPlayerPos, convertCoords} from "./game.js";
 import Point from "./point.js";
 import {drawHud, insideSpell, insidePause, drawOutline, HUD_WIDTH} from "./hud.js";
 import Spell from "./spell.js";
-import {updateTime} from "./time.js";
+import {startTime, updateTime} from "./time.js";
 
 var mouseDown = false;
 const mouseEnum = {NONE: 0, SPELL: 1, MOVE: 2};
 var mouseType = mouseEnum.NONE;
 
-export const PLAYER_SEPARATOR = 400;
 var spellPoints;
 
 var updateInterval;
@@ -17,7 +16,8 @@ var showSpell = false;
 var spellShown;
 //constants
 const SPELL_MIN_ACCEPT = 50;
-//useful to export
+//useful to export for the hud
+export const PLAYER_SEPARATOR = 400;
 export var spells = [];
 
 var playing;
@@ -37,7 +37,7 @@ function startGame() {
     updateInterval = setInterval(updateLogic, 1000/30);
 }
 
-function addSpell() {
+function getFreeColour() {
     let colour;
     let spellExists;
     do {
@@ -49,6 +49,12 @@ function addSpell() {
             }
         }
     } while (spellExists);
+    
+    return colour;
+}
+
+function addSpell() {
+    let colour = getFreeColour();
     
     let spell = new Spell(colour);
     spells.push(spell);
@@ -71,9 +77,11 @@ function removeEvents() {
 function onMouseDown(e) {
     mouseDown = true;
     
-    let spellNum = insideSpell(e.offsetX, e.offsetY);
+    let mouse = convertCoords(e.offsetX, e.offsetY);
     
-    if (player.coordsInside(e.offsetX, e.offsetY)) {
+    let spellNum = insideSpell(mouse.x, mouse.y);
+    
+    if (player.coordsInside(mouse.x, mouse.y)) {
         mouseType = mouseEnum.MOVE;
     } else if (spellNum != -1) {
         console.log(spellNum);
@@ -90,41 +98,48 @@ function onMouseDown(e) {
             showSpell = true;
             spellShown = spellNum;
         }
-    } else if (insidePause(e.offsetX, e.offsetY)) {
+    } else if (insidePause(mouse.x, mouse.y)) {
         if (playing) {
             playing = false;
             clearInterval(updateInterval);
         } else {
             playing = true;
+            startTime();
             updateInterval = setInterval(updateLogic, 1000/30);
             updateDraw();
         }
     } else {
         mouseType = mouseEnum.SPELL;
         spellPoints = [];
-        spellPoints.push(new Point(e.offsetX, e.offsetY));
+        spellPoints.push(new Point(mouse.x, mouse.y));
     }
 }
 
 function onMouseMove(e) {
+    let mouse = convertCoords(e.offsetX, e.offsetY);
+    
+    let movement = convertCoords(e.movementX, e.movementY);
+    
     if (mouseDown) {
         switch (mouseType) {
             case mouseEnum.MOVE:
-                movePlayer(e.movementX, e.movementY);
+                movePlayer(movement.x, movement.y);
                 break;
             case mouseEnum.SPELL:
-                spellPoints.push(new Point(e.offsetX, e.offsetY));
+                spellPoints.push(new Point(mouse.x, mouse.y));
                 break;
         }
     }
 }
 
 function movePlayer(dX, dY) {
-    player.x = clamp(player.x + dX, HUD_WIDTH+player.size, window.innerWidth-player.size);
-    player.y = clamp(player.y + dY, PLAYER_SEPARATOR+player.size, window.innerHeight-player.size);
+    player.x = clamp(player.x + dX, HUD_WIDTH+player.size, WIDTH-player.size);
+    player.y = clamp(player.y + dY, PLAYER_SEPARATOR+player.size, HEIGHT-player.size);
 }
 
 function onMouseUp(e) {
+    
+    //let mouse = convertCoords(e.offsetX, e.offsetY);
     
     mouseDown = false;
     
@@ -162,11 +177,12 @@ function onMouseUp(e) {
 
 function updateDraw() {
     clearCanvas();
+    drawHud();
     player.draw();
     if (showSpell) {
         drawOutline(spellShown);
     }
-    drawHud();
+    
     if (playing) {
         requestAnimationFrame(updateDraw);
     }
@@ -178,4 +194,4 @@ function updateLogic() {
     player.update();
 }
 
-export {startGame};
+export {startGame, getFreeColour};

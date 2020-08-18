@@ -1,3 +1,6 @@
+/**
+ * Very useful to have this for some things
+ */
 function Point(x, y) {
     this.x = x;
     this.y = y;

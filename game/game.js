@@ -2,7 +2,7 @@ import Player from "./player.js";
 import {startGame} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
 import {setHudInfo, HUD_WIDTH} from "./hud.js";
-import {startTime} from "./time.js";
+import {} from "./time.js";
 
 export const COLOURS = ["red", "green", "blue", "orange", "yellow", "purple", "pink", "brown"];
 
@@ -13,26 +13,83 @@ export var canvas;
 export var context;
 export var player;
 
+//just convenient for me lol
+export const WIDTH = 1366;
+export const HEIGHT = 695;
+
+const RATIO = WIDTH / HEIGHT;
+
+/**
+ * Starts the game
+ */
 function start(canvas2d) {
     canvas = canvas2d;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
     context = canvas.getContext('2d');
+    
+    resize();
     
     player = new Player();
     
     setupHud();
     
-    gameState = gameEnum.GAME;
+    gameState = gameEnum.DOOR;
     
-    startGame();
+    window.addEventListener("resize", resize);
+    
+    startDoor();
 }
 
+/**
+ * Handles resizing
+ */
+function resize() {
+    let screenRatio = window.innerWidth / window.innerHeight;
+    
+    //maintain ratio of game
+    if (RATIO > screenRatio) {
+        //height should be limited
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerWidth / RATIO;
+    } else {
+        //width should be limited
+        canvas.width = window.innerHeight * RATIO;
+        canvas.height = window.innerHeight;
+    }
+    
+    resetTransform();
+    
+}
+
+/**
+ * Converts coords from the screen to the game for mouse events
+ */
+function convertCoords(xCoord, yCoord) {
+    let x = WIDTH * xCoord / canvas.width;
+    let y = HEIGHT * yCoord / canvas.height;
+    
+    return {x, y};
+}
+
+/**
+ * Sets the transform of the context to the right thing
+ */
+function resetTransform() {
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    
+    context.scale(canvas.width / WIDTH, canvas.height / HEIGHT);
+}
+
+/**
+ * Useful to have the player's position being set being constant
+ */
 function setPlayerPos() {
-    player.x = HUD_WIDTH + (window.innerWidth - HUD_WIDTH)/2;
+    player.x = HUD_WIDTH + (WIDTH - HUD_WIDTH)/2;
     player.y = 600;
 }
 
+/**
+ * Should for sure be changed
+ */
 function setupHud() {
     let hudInfoObj = {};
     hudInfoObj.maxPlayerHealth = player.maxHealth;
@@ -40,11 +97,14 @@ function setupHud() {
     setHudInfo(hudInfoObj);
 }
 
+/**
+ * Clears the canvas
+ */
 function clearCanvas() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, WIDTH, HEIGHT);
 }
 
-//utility methods
+//utility methods for exporting
 function getRandomInt(min, max) {
     return Math.floor(Math.random()*(max-min+1))+min;
 }
@@ -55,4 +115,4 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export {start, clearCanvas, setPlayerPos, getRandomInt, clamp};
+export {start, clearCanvas, setPlayerPos, getRandomInt, convertCoords, clamp};

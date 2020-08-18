@@ -1,4 +1,4 @@
-import {context, gameState, gameEnum} from "./game.js";
+import {context, gameState, gameEnum, WIDTH, HEIGHT} from "./game.js";
 import {spells, PLAYER_SEPARATOR} from "./gamestate.js";
 import {SPELL_SIZE} from "./spell.js";
 
@@ -18,10 +18,17 @@ const PAUSE_BUTTON_SIZE = 205;
 const PAUSE_BUTTON_Y = 480;
 const PAUSE_SIZE = 40;
 
+/**
+ * Probably should be changed
+ */
 function setHudInfo(infoObj) {
     Object.assign(hudVars, infoObj);
 }
 
+/**
+ * Gets if the given coords are within a hud spell
+ * Returns the index of the spell if so, otherwise -1
+ */
 function insideSpell(x, y) {
     let yNum = Math.floor((y-SPELL_HUD_OFFSET) / (SPELL_HUD_SIZE+OFFSET));
     //if x is in correct area
@@ -45,6 +52,9 @@ function insideSpell(x, y) {
     return -1;
 }
 
+/**
+ * Gets if given coords are within the pause button
+ */
 function insidePause(x, y) {
     if (x >= OFFSET && x <= OFFSET + PAUSE_BUTTON_SIZE &&
         y >= PAUSE_BUTTON_Y && y <= PAUSE_BUTTON_Y + PAUSE_BUTTON_SIZE) {
@@ -56,7 +66,7 @@ function insidePause(x, y) {
 
 /**
  * Draws the hud
- * could make a lot more of these numbers into variables
+ * could make a lot more of these hard-coded numbers into constants
  */
 function drawHud() {
     //draw lines on HUD
@@ -65,14 +75,14 @@ function drawHud() {
         context.lineWidth = 5;
         context.strokeStyle = "#666666";
         context.moveTo(HUD_WIDTH, PLAYER_SEPARATOR);
-        context.lineTo(window.innerWidth, PLAYER_SEPARATOR);
+        context.lineTo(WIDTH, PLAYER_SEPARATOR);
         context.stroke();
     }
     
     context.beginPath();
     context.strokeStyle = "#000000";
     context.moveTo(HUD_WIDTH, 0);
-    context.lineTo(HUD_WIDTH, window.innerHeight);
+    context.lineTo(HUD_WIDTH, HEIGHT);
     context.stroke();
     
     //draw health bar
@@ -144,13 +154,16 @@ function drawHud() {
     context.translate(-OFFSET - PAUSE_BUTTON_SIZE/2, -PAUSE_BUTTON_Y - PAUSE_BUTTON_SIZE/2);
 }
 
+/**
+ * Draws the outline for a spell on the hud
+ */
 function drawOutline(index) {
     context.globalAlpha = 0.5;
     
     let width = 300;
     let height = 300;
-    let xPos = window.innerWidth/2-width/2;
-    let yPos = window.innerHeight/2-height/2;
+    let xPos = WIDTH/2-width/2;
+    let yPos = HEIGHT/2-height/2;
     //transform canvas for this
     context.translate(xPos, yPos);
     //make it width and height

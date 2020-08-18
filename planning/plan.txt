@@ -5,4 +5,5 @@ doors have patterns based on what's in the rooms
 game descends into glitchy effects?
 
 actual game thing:
-magic casting -ice, fire, light
+on turn 6, there's 1 glitch door,7 2 and on turn 8 you have 3 glitch doors
+the glitch door takes you to the final boss

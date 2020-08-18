@@ -1,4 +1,8 @@
 function startMenu() {
+    drawMenu();
+}
+
+function drawMenu() {
     
 }
 

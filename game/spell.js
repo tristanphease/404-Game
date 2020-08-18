@@ -57,6 +57,7 @@ Spell.prototype.generatePoints = function() {
 
 /**
  * gets the bounding box
+ * returns an object
  */
 function getBoundingBox(points) {
     let minX = Number.MAX_SAFE_INTEGER;
@@ -91,12 +92,14 @@ function quadraticInterp(val0, val1, ctrl, t) {
     //return (1-t)*((1-t)*val0 + t*ctrl) + t*((1-t)*ctrl + t*val1);
 }
 
+//makes a random point
 function makePoint(min, max) {
     return new Point(getRandomInt(0, SPELL_SIZE), getRandomInt(0, SPELL_SIZE));
 }
 
 /**
  * Works out how well the collection of points matches this curve
+ * Could for sure be improved but it at least works ok lol
  */
 Spell.prototype.matches = function(points) {
     
@@ -128,7 +131,7 @@ Spell.prototype.matches = function(points) {
     dist /= this.curvePoints.length;
     //divide by scale?
     //would make larger drawing need to be less precise and small ones more so
-    //come back to this later
+    //maybe
     
     return dist;
 }

@@ -1,6 +1,7 @@
-import {player, clamp, clearCanvas, setPlayerPos} from "./game.js";
+import {player, clamp, clearCanvas, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
+import {getFreeColour} from "./gamestate.js";
 import {drawHud, HUD_WIDTH} from "./hud.js";
-import {updateTime} from "./time.js";
+import {startTime, updateTime} from "./time.js";
 import Door, {DOOR_WIDTH, DOOR_HEIGHT} from "./door.js";
 
 var mouseDown = false;
@@ -16,7 +17,7 @@ var doors = [];
 function startDoor() {
     setPlayerPos();
     
-    let width = (window.innerWidth-HUD_WIDTH)/4;
+    let width = (WIDTH-HUD_WIDTH)/4;
     
     let door1 = new Door(HUD_WIDTH + width, 200, 1, "green");
     doors.push(door1);
@@ -58,15 +59,19 @@ function removeEvents() {
 function onMouseDown(e) {
     mouseDown = true;
     
+    let mouse = convertCoords(e.offsetX, e.offsetY);
+    
     //can only move player in door mode
-    if (player.coordsInside(e.offsetX, e.offsetY)) {
+    if (player.coordsInside(mouse.x, mouse.y)) {
         mouseType = mouseEnum.MOVE;
     }
 }
 
 function onMouseMove(e) {
+    let movement = convertCoords(e.movementX, e.movementY);
+    
     if (mouseDown && mouseType === mouseEnum.MOVE) {
-        movePlayer(e.movementX, e.movementY);
+        movePlayer(movement.x, movement.y);
         
         for (let i=0;i<doors.length;i++) {
             if (doors[i].coordsInside(player.x, player.y)) {
@@ -79,8 +84,8 @@ function onMouseMove(e) {
 }
 
 function movePlayer(dX, dY) {
-    player.x = clamp(player.x + dX, HUD_WIDTH+player.size, window.innerWidth-player.size);
-    player.y = clamp(player.y + dY, player.size, window.innerHeight-player.size);
+    player.x = clamp(player.x + dX, HUD_WIDTH+player.size, WIDTH-player.size);
+    player.y = clamp(player.y + dY, player.size, HEIGHT-player.size);
 }
 
 function onMouseUp(e) {

@@ -20,6 +20,9 @@ function Door(x, y, number, colour) {
     this.effects = [];
 }
 
+/**
+ * Draws a door
+ */
 Door.prototype.draw = function() {
     
     
