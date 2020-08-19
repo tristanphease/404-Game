@@ -1,8 +1,6 @@
-import {context, gameState, gameEnum, WIDTH, HEIGHT} from "./game.js";
+import {context, player, gameState, gameEnum, WIDTH, HEIGHT} from "./game.js";
 import {spells, PLAYER_SEPARATOR} from "./gamestate.js";
 import {SPELL_SIZE} from "./spell.js";
-
-var hudVars = {};
 
 //the width of the hud on the left
 export const HUD_WIDTH = 230;
@@ -17,13 +15,6 @@ const SPELL_HUD_OFFSET = 50;
 const PAUSE_BUTTON_SIZE = 205;
 const PAUSE_BUTTON_Y = 480;
 const PAUSE_SIZE = 40;
-
-/**
- * Probably should be changed
- */
-function setHudInfo(infoObj) {
-    Object.assign(hudVars, infoObj);
-}
 
 /**
  * Gets if the given coords are within a hud spell
@@ -87,7 +78,7 @@ function drawHud() {
     
     //draw health bar
     context.beginPath();
-    context.rect(OFFSET, OFFSET, HEALTH_WIDTH*(hudVars.playerHealth/hudVars.maxPlayerHealth), HEALTH_HEIGHT);
+    context.rect(OFFSET, OFFSET, HEALTH_WIDTH*(player.health/player.maxHealth), HEALTH_HEIGHT);
     context.fillStyle = "#ff4444";
     context.fill();
     
@@ -178,4 +169,4 @@ function drawOutline(index) {
     context.globalAlpha = 1;
 }
 
-export {setHudInfo, drawHud, insideSpell, insidePause, drawOutline};
+export {drawHud, insideSpell, insidePause, drawOutline};

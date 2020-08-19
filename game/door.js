@@ -16,6 +16,7 @@ function Door(x, y, number, colour) {
     this.number = number;
     this.colour = colour;
     this.open = false;
+    this.glitch = false;
     
     this.effects = [];
 }
@@ -80,6 +81,24 @@ Door.prototype.draw = function() {
     }
     */
     
+    for (let i=0;i<this.effects.length;i++) {
+        let eff = this.effects[i];
+        
+        context.strokeStyle = this.colour;
+        context.lineWidth = 15;
+        
+        context.translate(eff.pos.x, eff.pos.y-DOOR_HEIGHT/2);
+        
+        context.rotate(Math.sin((time - eff.startTime)*0.001));
+        context.beginPath();
+        context.rect(0, 0, 10, (time - eff.startTime)*0.001);
+        context.stroke();
+        
+        context.rotate(-Math.sin((time - eff.startTime)*0.001));
+        
+        context.translate(-eff.pos.x, -eff.pos.y+DOOR_HEIGHT/2);
+    }
+    
     //door handle
     context.beginPath();
     context.arc(DOOR_WIDTH/2 + 50, 0, 10, 0, 2*Math.PI);
@@ -109,7 +128,7 @@ Door.prototype.coordsInside = function(x, y) {
 }
 
 Door.prototype.update = function() {
-    if (Math.random() < 0.05) {
+    if (Math.random() < 0.1) {
         //let x = Math.random()*(DOOR_WIDTH-EFFECT_RADIUS*2)+EFFECT_RADIUS;
         //let y = Math.random()*(DOOR_HEIGHT-EFFECT_RADIUS*2)+EFFECT_RADIUS;
         let x = Math.random()*DOOR_WIDTH;

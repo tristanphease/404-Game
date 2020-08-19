@@ -1,31 +1,41 @@
-import {player, clamp, clearCanvas, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
+import {player, onDoorEnd, clamp, clearCanvas, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
 import {getFreeColour} from "./gamestate.js";
 import {drawHud, HUD_WIDTH} from "./hud.js";
 import {startTime, updateTime} from "./time.js";
 import Door, {DOOR_WIDTH, DOOR_HEIGHT} from "./door.js";
 
-var mouseDown = false;
+var mouseDown;
 const mouseEnum = {NONE: 0, SPELL: 1, MOVE: 2};
-var mouseType = mouseEnum.NONE;
+var mouseType;
 
 var updateInterval;
 
 var playing;
 
-var doors = [];
+var doors;
+
+export var doorColour;
+
+function initVars() {
+    doors = [];
+    mouseType = mouseEnum.NONE;
+    mouseDown = false;
+}
 
 function startDoor() {
     setPlayerPos();
     
+    initVars();
+    
     let width = (WIDTH-HUD_WIDTH)/4;
     
-    let door1 = new Door(HUD_WIDTH + width, 200, 1, "green");
+    let door1 = new Door(HUD_WIDTH + width, 200, 1, getFreeColour());
     doors.push(door1);
     
-    let door2 = new Door(HUD_WIDTH + width*2, 200, 2, "red");
+    let door2 = new Door(HUD_WIDTH + width*2, 200, 2, getFreeColour());
     doors.push(door2);
     
-    let door3 = new Door(HUD_WIDTH + width*3, 200, 3, "blue");
+    let door3 = new Door(HUD_WIDTH + width*3, 200, 3, getFreeColour());
     doors.push(door3);
     
     playing = true;
@@ -37,6 +47,7 @@ function startDoor() {
 }
 
 function endDoor() {
+    removeEvents();
     clearInterval(updateInterval);
     playing = false;
 }
@@ -95,7 +106,10 @@ function onMouseUp(e) {
     
     for (let i=0;i<doors.length;i++) {
         if (doors[i].open) {
+            doorColour = doors[i].colour;
             //go into door
+            endDoor();
+            onDoorEnd();
         }
     }
     

@@ -1,7 +1,7 @@
 import Player from "./player.js";
 import {startGame} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
-import {setHudInfo, HUD_WIDTH} from "./hud.js";
+import {HUD_WIDTH} from "./hud.js";
 import {} from "./time.js";
 
 export const COLOURS = ["red", "green", "blue", "orange", "yellow", "purple", "pink", "brown"];
@@ -12,6 +12,8 @@ export var gameState;
 export var canvas;
 export var context;
 export var player;
+
+export var roundNum;
 
 //just convenient for me lol
 export const WIDTH = 1366;
@@ -30,11 +32,25 @@ function start(canvas2d) {
     
     player = new Player();
     
-    setupHud();
-    
     gameState = gameEnum.DOOR;
     
+    roundNum = 0;
+    
     window.addEventListener("resize", resize);
+    
+    startDoor();
+}
+
+function onDoorEnd() {
+    gameState = gameEnum.GAME;
+    
+    roundNum++;
+    
+    startGame();
+}
+
+function onGameEnd() {
+    gameState = gameEnum.DOOR;
     
     startDoor();
 }
@@ -88,16 +104,6 @@ function setPlayerPos() {
 }
 
 /**
- * Should for sure be changed
- */
-function setupHud() {
-    let hudInfoObj = {};
-    hudInfoObj.maxPlayerHealth = player.maxHealth;
-    hudInfoObj.playerHealth = player.health;
-    setHudInfo(hudInfoObj);
-}
-
-/**
  * Clears the canvas
  */
 function clearCanvas() {
@@ -115,4 +121,4 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export {start, clearCanvas, setPlayerPos, getRandomInt, convertCoords, clamp};
+export {start, onDoorEnd, onGameEnd, clearCanvas, setPlayerPos, getRandomInt, convertCoords, clamp};

@@ -1,6 +1,5 @@
 import {context} from "./game.js";
 import {spells} from "./gamestate.js";
-import SpellShot from "./spellshot.js";
 import {time} from "./time.js";
 
 function Player() {
@@ -11,7 +10,6 @@ function Player() {
     this.health = this.maxHealth;
     
     this.spellVar = [];
-    this.spellShots = [];
 }
 
 /**
@@ -56,14 +54,7 @@ Player.prototype.draw = function() {
         context.stroke();
     }
     
-   
-    
     context.translate(-this.x, -this.y);
-    
-    //draw all the spellshots
-    for (let i=0;i<this.spellShots.length;i++) {
-        this.spellShots[i].draw();
-    }
 }
 
 /**
@@ -77,26 +68,19 @@ Player.prototype.coordsInside = function(x, y) {
     return false;
 }
 
-/**
- * Makes a spell shot
- */
-Player.prototype.makeSpellShot = function(index) {
-    let spellshot = new SpellShot(this.x, this.y, spells[index].colour);
-    this.spellShots.push(spellshot);
+Player.prototype.collidesWith = function(enemyShot) {
+    if (Math.hypot(this.x - enemyShot.x, this.y - enemyShot.y) <= this.size + enemyShot.radius) {
+        this.health -= 3;
+        return true;
+    }
+    return false;
 }
 
 /**
  * Updates the player which updates all its spell shots
  */
 Player.prototype.update = function() {
-    for (let i=0;i<this.spellShots.length;i++) {
-        this.spellShots[i].update();
-        //if it's gone above the top, remove it
-        if (this.spellShots[i].y < -this.spellShots[i].size) {
-            this.spellShots.splice(i, 1);
-            i--;
-        }
-    }
+    
 }
 
 export default Player;
