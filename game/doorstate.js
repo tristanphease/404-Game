@@ -1,8 +1,9 @@
-import {player, onDoorEnd, clamp, clearCanvas, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
-import {getFreeColour} from "./gamestate.js";
-import {drawHud, HUD_WIDTH} from "./hud.js";
-import {startTime, updateTime} from "./time.js";
+import {player, roundNum, onDoorEnd, clamp, clearCanvas, getRandomInt, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
+import {getFreeColours} from "./gamestate.js";
+import {drawHud, insidePause, HUD_WIDTH} from "./hud.js";
+import {restartTime, pauseTime, updateTime} from "./time.js";
 import Door, {DOOR_WIDTH, DOOR_HEIGHT} from "./door.js";
+import {hideOptions, drawOptions} from "./options.js";
 
 var mouseDown;
 const mouseEnum = {NONE: 0, SPELL: 1, MOVE: 2};
@@ -10,6 +11,7 @@ var mouseType;
 
 var updateInterval;
 
+var paused;
 var playing;
 
 var doors;
@@ -29,15 +31,34 @@ function startDoor() {
     
     let width = (WIDTH-HUD_WIDTH)/4;
     
-    let door1 = new Door(HUD_WIDTH + width, 200, 1, getFreeColour());
+    let glitch;
+    
+    if (roundNum < 6) {
+        glitch = 0;
+    } else if (roundNum == 6) {
+        glitch = 1;
+    } else if (roundNum == 7) {
+        glitch = 2;
+    } else if (roundNum == 8) {
+        glitch = 3;
+    }
+    
+    let colours = getFreeColours(3-glitch);
+    
+    for (let i=0, len=colours.length;i<3-len;i++) {
+        colours[getRandomInt(0, colours.length)] = null;
+    }
+    
+    let door1 = new Door(HUD_WIDTH + width, 200, 1, colours[0]);
     doors.push(door1);
     
-    let door2 = new Door(HUD_WIDTH + width*2, 200, 2, getFreeColour());
+    let door2 = new Door(HUD_WIDTH + width*2, 200, 2, colours[1]);
     doors.push(door2);
     
-    let door3 = new Door(HUD_WIDTH + width*3, 200, 3, getFreeColour());
+    let door3 = new Door(HUD_WIDTH + width*3, 200, 3, colours[2]);
     doors.push(door3);
     
+    paused = false;
     playing = true;
     
     addEvents();
@@ -73,8 +94,19 @@ function onMouseDown(e) {
     let mouse = convertCoords(e.offsetX, e.offsetY);
     
     //can only move player in door mode
-    if (player.coordsInside(mouse.x, mouse.y)) {
+    if (player.coordsInside(mouse.x, mouse.y) && !paused) {
         mouseType = mouseEnum.MOVE;
+    } else if (insidePause(mouse.x, mouse.y)) {
+        if (!paused) {
+            paused = true;
+            clearInterval(updateInterval);
+            pauseTime();
+        } else {
+            paused = false;
+            hideOptions();
+            restartTime();
+            updateInterval = setInterval(updateLogic, 1000/30);
+        }
     }
 }
 
@@ -124,6 +156,11 @@ function updateDraw() {
     player.draw();
     
     drawHud();
+    
+    if (paused) {
+        drawOptions();
+    }
+    
     if (playing) {
         requestAnimationFrame(updateDraw);
     }

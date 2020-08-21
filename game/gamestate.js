@@ -5,7 +5,8 @@ import SpellShot from "./spellshot.js";
 import Spell from "./spell.js";
 import Enemy from "./enemy.js";
 import {doorColour} from "./doorstate.js";
-import {startTime, updateTime} from "./time.js";
+import {pauseTime, restartTime, updateTime} from "./time.js";
+import {hideOptions, drawOptions} from "./options.js";
 
 var mouseDown;
 const mouseEnum = {NONE: 0, SPELL: 1, MOVE: 2};
@@ -30,11 +31,13 @@ var enemyShots ;
 var spellShots;
 
 var playing;
+var paused;
 
 function initVars() {
     enemies = [];
     enemyShots = [];
     spellShots = [];
+    paused = false;
     playing = true;
     showSpell = false;
     mouseDown = false;
@@ -64,10 +67,13 @@ function endGame() {
 }
 
 function addEnemies() {
+    //could replace with algorithm for the number of enemies
     let enemyNum = roundNum * 1;
     
     for (let i=0;i<enemyNum;i++) {
-        enemies.push(new Enemy(500, 100));
+        let x = Math.random() * (WIDTH - HUD_WIDTH) + HUD_WIDTH;
+        let y = Math.random() * PLAYER_SEPARATOR;
+        enemies.push(new Enemy(x, y));
     }
 }
 
@@ -75,20 +81,27 @@ function addEnemyShot(shot) {
     enemyShots.push(shot);
 }
 
-function getFreeColour() {
+function getFreeColours(num) {
+    let colours = [];
     let colour;
     let spellExists;
-    do {
-        spellExists = false;
-        colour = COLOURS[getRandomInt(0, COLOURS.length-1)];
-        for (let i=0;i<spells.length;i++) {
-            if (spells[i].colour === colour) {
+    while (colours.length < num) {
+        do {
+            spellExists = false;
+            colour = COLOURS[getRandomInt(0, COLOURS.length-1)];
+            for (let i=0;i<spells.length;i++) {
+                if (spells[i].colour === colour) {
+                    spellExists = true;
+                }
+            }
+            if (colours.includes(colour)) {
                 spellExists = true;
             }
-        }
-    } while (spellExists);
+        } while (spellExists);
+        colours.push(colour);
+    }
     
-    return colour;
+    return colours;
 }
 
 function addSpell(colour) {
@@ -125,9 +138,9 @@ function onMouseDown(e) {
     
     let spellNum = insideSpell(mouse.x, mouse.y);
     
-    if (player.coordsInside(mouse.x, mouse.y)) {
+    if (player.coordsInside(mouse.x, mouse.y) && !paused) {
         mouseType = mouseEnum.MOVE;
-    } else if (spellNum != -1) {
+    } else if (spellNum != -1 && !paused) {
         console.log(spellNum);
         if (showSpell) {
             if (spellNum == spellShown) {
@@ -143,16 +156,17 @@ function onMouseDown(e) {
             spellShown = spellNum;
         }
     } else if (insidePause(mouse.x, mouse.y)) {
-        if (playing) {
-            playing = false;
+        if (!paused) {
+            paused = true;
             clearInterval(updateInterval);
+            pauseTime();
         } else {
-            playing = true;
-            startTime();
+            paused = false;
+            restartTime();
             updateInterval = setInterval(updateLogic, 1000/30);
-            updateDraw();
+            hideOptions();
         }
-    } else {
+    } else if (!paused) {
         mouseType = mouseEnum.SPELL;
         spellPoints = [];
         spellPoints.push(new Point(mouse.x, mouse.y));
@@ -241,6 +255,10 @@ function updateDraw() {
         drawOutline(spellShown);
     }
     
+    if (paused) {
+        drawOptions();
+    }
+    
     if (playing) {
         requestAnimationFrame(updateDraw);
     }
@@ -312,4 +330,4 @@ function updateLogic() {
     }
 }
 
-export {startGame, addEnemyShot, getFreeColour};
+export {startGame, addEnemyShot, getFreeColours};

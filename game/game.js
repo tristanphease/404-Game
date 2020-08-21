@@ -1,10 +1,15 @@
 import Player from "./player.js";
 import {startGame} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
-import {HUD_WIDTH} from "./hud.js";
-import {} from "./time.js";
+import {HUD_WIDTH, initHud} from "./hud.js";
+import {startTime} from "./time.js";
+import {startOptions, setInputPositions} from "./options.js";
 
 export const COLOURS = ["red", "green", "blue", "orange", "yellow", "purple", "pink", "brown"];
+
+export const GLITCH_PALETTE = ["#FEFEF3", "#E1B288", "#BFB6C7", "#7D7199", "#1A100E"];
+
+export var glitchPattern;
 
 export const gameEnum = {MENU: 0, GAME: 1, DOOR: 2};
 export var gameState;
@@ -15,7 +20,7 @@ export var player;
 
 export var roundNum;
 
-//just convenient for me lol
+//just convenient values lol
 export const WIDTH = 1366;
 export const HEIGHT = 695;
 
@@ -28,17 +33,46 @@ function start(canvas2d) {
     canvas = canvas2d;
     context = canvas.getContext('2d');
     
+    initHud();
+    
+    startOptions();
+    
     resize();
     
     player = new Player();
     
+    generateGlitchPattern();
+    
+    startTime();
+    
     gameState = gameEnum.DOOR;
     
-    roundNum = 0;
+    roundNum = 6;
     
     window.addEventListener("resize", resize);
     
     startDoor();
+}
+
+function generateGlitchPattern() {
+    
+    let glitchCanvas = document.createElement("CANVAS");
+    let glitchContext = glitchCanvas.getContext("2d");
+    
+    glitchCanvas.width = 500;
+    glitchCanvas.height = 500;
+    let xSize = 10;
+    let ySize = 10;
+    
+    for (let x=0;x<glitchCanvas.width;x+=xSize) {
+        for (let y=0;y<glitchCanvas.height;y+=ySize) {
+            let index = getRandomInt(0, GLITCH_PALETTE.length-1);
+            glitchContext.fillStyle = GLITCH_PALETTE[index];
+            glitchContext.fillRect(x, y, xSize, ySize);
+        }
+    }
+    
+    glitchPattern = context.createPattern(glitchCanvas, "repeat");
 }
 
 function onDoorEnd() {
@@ -50,6 +84,12 @@ function onDoorEnd() {
 }
 
 function onGameEnd() {
+    gameState = gameEnum.DOOR;
+    
+    startDoor();
+}
+
+function onMenuEnd() {
     gameState = gameEnum.DOOR;
     
     startDoor();
@@ -72,6 +112,7 @@ function resize() {
         canvas.height = window.innerHeight;
     }
     
+    setInputPositions();
     resetTransform();
     
 }
@@ -82,6 +123,16 @@ function resize() {
 function convertCoords(xCoord, yCoord) {
     let x = WIDTH * xCoord / canvas.width;
     let y = HEIGHT * yCoord / canvas.height;
+    
+    return {x, y};
+}
+
+/**
+ * Converts coords from the game to the screen for hud reasons
+ */
+function convertCoordsBack(xCoord, yCoord) {
+    let x = xCoord * canvas.width / WIDTH;
+    let y = yCoord * canvas.height / HEIGHT;
     
     return {x, y};
 }
@@ -121,4 +172,4 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export {start, onDoorEnd, onGameEnd, clearCanvas, setPlayerPos, getRandomInt, convertCoords, clamp};
+export {start, onDoorEnd, onGameEnd, onMenuEnd, clearCanvas, setPlayerPos, getRandomInt, convertCoords, convertCoordsBack, clamp};

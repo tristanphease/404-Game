@@ -1,6 +1,7 @@
 import {context, player, gameState, gameEnum, WIDTH, HEIGHT} from "./game.js";
 import {spells, PLAYER_SEPARATOR} from "./gamestate.js";
 import {SPELL_SIZE} from "./spell.js";
+import {paused} from "./time.js";
 
 //the width of the hud on the left
 export const HUD_WIDTH = 230;
@@ -10,11 +11,25 @@ const HEALTH_WIDTH = 200;
 const HEALTH_HEIGHT = 20;
 const OFFSET = 10;
 const SPELL_HUD_SIZE = 100;
-const SPELL_HUD_OFFSET = 50;
+const SPELL_HUD_OFFSET = 40;
 
 const PAUSE_BUTTON_SIZE = 205;
 const PAUSE_BUTTON_Y = 480;
 const PAUSE_SIZE = 40;
+
+//defaults on outline vars
+export var outlineX;
+export var outlineY;
+export var outlineSize;
+export var outlineAlpha;
+
+function initHud() {
+    outlineSize = 400;
+    outlineAlpha = 0.5;
+    
+    outlineX = (WIDTH-HUD_WIDTH)/2 + HUD_WIDTH - outlineSize;
+    outlineY = HEIGHT/2 - outlineSize;
+}
 
 /**
  * Gets if the given coords are within a hud spell
@@ -123,50 +138,60 @@ function drawHud() {
     context.strokeStyle = "#000000";
     context.stroke();
     
-    /*
-    context.beginPath();
-    context.fillStyle = "#7777ff";
-    context.rect(OFFSET+PAUSE_BUTTON_SIZE/3-PAUSE_SIZE/2, PAUSE_BUTTON_Y+40, PAUSE_SIZE, PAUSE_BUTTON_SIZE-80);
-    context.fill();
+    if (!paused) {
+        context.beginPath();
+        context.fillStyle = "#7777ff";
+        context.rect(OFFSET+PAUSE_BUTTON_SIZE/3-PAUSE_SIZE/2, PAUSE_BUTTON_Y+40, PAUSE_SIZE, PAUSE_BUTTON_SIZE-80);
+        context.fill();
+        
+        context.rect(OFFSET+PAUSE_BUTTON_SIZE*2/3-PAUSE_SIZE/2, PAUSE_BUTTON_Y+40, PAUSE_SIZE, PAUSE_BUTTON_SIZE-80);
+        context.fill();
+    } else {
+        context.beginPath();
+        context.fillStyle = "#77ff77";
+        //translate to centre to make it easier
+        context.translate(OFFSET + PAUSE_BUTTON_SIZE/2, PAUSE_BUTTON_Y + PAUSE_BUTTON_SIZE/2);
+        context.moveTo(-PAUSE_SIZE, PAUSE_SIZE);
+        context.lineTo(-PAUSE_SIZE, -PAUSE_SIZE);
+        context.lineTo(PAUSE_SIZE, 0);
+        context.closePath();
+        context.fill();
+        //undo translation
+        context.translate(-OFFSET - PAUSE_BUTTON_SIZE/2, -PAUSE_BUTTON_Y - PAUSE_BUTTON_SIZE/2);
+    }
     
-    context.rect(OFFSET+PAUSE_BUTTON_SIZE*2/3-PAUSE_SIZE/2, PAUSE_BUTTON_Y+40, PAUSE_SIZE, PAUSE_BUTTON_SIZE-80);
-    context.fill();*/
     
-    context.beginPath();
-    context.fillStyle = "#77ff77";
-    //translate to centre to make it easier
-    context.translate(OFFSET + PAUSE_BUTTON_SIZE/2, PAUSE_BUTTON_Y + PAUSE_BUTTON_SIZE/2);
-    context.moveTo(-PAUSE_SIZE, PAUSE_SIZE);
-    context.lineTo(-PAUSE_SIZE, -PAUSE_SIZE);
-    context.lineTo(PAUSE_SIZE, 0);
-    context.closePath();
-    context.fill();
-    
-    context.translate(-OFFSET - PAUSE_BUTTON_SIZE/2, -PAUSE_BUTTON_Y - PAUSE_BUTTON_SIZE/2);
 }
 
 /**
  * Draws the outline for a spell on the hud
  */
 function drawOutline(index) {
-    context.globalAlpha = 0.5;
+    context.globalAlpha = outlineAlpha;
     
-    let width = 300;
-    let height = 300;
-    let xPos = WIDTH/2-width/2;
-    let yPos = HEIGHT/2-height/2;
+    let width = outlineSize;
+    let height = outlineSize;
+    let xPos = outlineX;
+    let yPos = outlineY;
     //transform canvas for this
     context.translate(xPos, yPos);
     //make it width and height
-    context.scale(width/SPELL_SIZE, height/SPELL_SIZE);
+    context.scale(outlineSize/SPELL_SIZE, outlineSize/SPELL_SIZE);
     
     spells[index].draw();
     
     //undo transformations
-    context.scale(SPELL_SIZE/width, SPELL_SIZE/height);
+    context.scale(SPELL_SIZE/outlineSize, SPELL_SIZE/outlineSize);
     context.translate(-xPos, -yPos);
     
     context.globalAlpha = 1;
 }
 
-export {drawHud, insideSpell, insidePause, drawOutline};
+function setOutlineVars(obj) {
+    if (obj.x) {outlineX = obj.x;}
+    if (obj.y) {outlineY = obj.y;}
+    if (obj.size) {outlineSize = obj.size;}
+    if (obj.alpha) {outlineAlpha = obj.alpha;}
+}
+
+export {initHud, drawHud, insideSpell, insidePause, setOutlineVars, drawOutline};

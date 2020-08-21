@@ -6,8 +6,8 @@ function SpellShot(x, y, colour) {
     this.y = y;
     this.colour = colour;
     
-    this.radius = 20;
-    this.speed = 0.1;
+    this.radius = 10;
+    this.speed = 0.2;
 }
 
 SpellShot.prototype.draw = function() {

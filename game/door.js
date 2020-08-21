@@ -1,4 +1,4 @@
-import {context} from "./game.js";
+import {context, GLITCH_PALETTE, glitchPattern} from "./game.js";
 import {time} from "./time.js";
 import Point from "./point.js";
 
@@ -14,9 +14,15 @@ function Door(x, y, number, colour) {
     this.x = x;
     this.y = y;
     this.number = number;
-    this.colour = colour;
+    if (!colour) {
+        this.glitch = true;
+        this.colour = "white";
+    } else {
+        this.glitch = false;
+        this.colour = colour;
+    }
+    
     this.open = false;
-    this.glitch = false;
     
     this.effects = [];
 }
@@ -31,10 +37,14 @@ Door.prototype.draw = function() {
     context.rect(this.x-DOOR_WIDTH/2, this.y-DOOR_HEIGHT/2, DOOR_WIDTH, DOOR_HEIGHT);
     context.fillStyle = "#ffffff";
     context.fill();
+    context.lineWidth = 6;
     context.strokeStyle = "#000000";
     context.stroke();
     //all drawing here must be inside the door
     context.save();
+    //clip including the line width 
+    context.beginPath();
+    context.rect(this.x-DOOR_WIDTH/2+3, this.y-DOOR_HEIGHT/2+3, DOOR_WIDTH-6, DOOR_HEIGHT-6);
     context.clip();
     
     context.translate(this.x - DOOR_WIDTH/2, this.y);
@@ -81,6 +91,8 @@ Door.prototype.draw = function() {
     }
     */
     
+    //also not great
+    /*
     for (let i=0;i<this.effects.length;i++) {
         let eff = this.effects[i];
         
@@ -97,6 +109,35 @@ Door.prototype.draw = function() {
         context.rotate(-Math.sin((time - eff.startTime)*0.001));
         
         context.translate(-eff.pos.x, -eff.pos.y+DOOR_HEIGHT/2);
+    }*/
+    
+    for (let i=0;i<this.effects.length;i++) {
+        let eff = this.effects[i];
+        
+        let y = eff.pos.y-DOOR_HEIGHT/2;
+        
+        let circX = eff.pos.x;
+        let circY = y;
+        
+        if (this.glitch) {
+            context.fillStyle = glitchPattern;
+            
+            circX += Math.floor(Math.cos((time-eff.startTime)*0.001)*(time-eff.startTime)*0.001)*100;
+            circY += Math.floor(Math.sin((time-eff.startTime)*0.001)*(time-eff.startTime)*0.001)*100;
+        } else {
+            let grad = context.createRadialGradient(eff.pos.x, y, 10, eff.pos.x, y, 30);
+            grad.addColorStop(0, this.colour);
+            grad.addColorStop(1, "black");
+            
+            context.fillStyle = grad;
+            
+            circX += Math.cos((time-eff.startTime)*0.001)*(time-eff.startTime)*0.005;
+            circY += Math.sin((time-eff.startTime)*0.001)*(time-eff.startTime)*0.005;
+        }
+        
+        context.beginPath();
+        context.arc(circX, circY, 30, 0, 2*Math.PI);
+        context.fill();
     }
     
     //door handle

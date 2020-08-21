@@ -1,12 +1,14 @@
 import {player, context, COLOURS, getRandomInt} from "./game.js";
-import {time, deltaTime} from "./time.js";
+import {time, startTimeout, deltaTime} from "./time.js";
 import Point from "./point.js";
 import {PLAYER_SEPARATOR, addEnemyShot} from "./gamestate.js";
 import EnemyShot from "./enemyshot.js";
 
 const POINT_NUM = 30;
 
+//time it takes an enemy to shoot
 const SHOOT_TIME = 2000;
+//time the enemy spends idling
 const IDLE_TIME = 2000;
 
 //ai states:
@@ -21,8 +23,9 @@ function Enemy(x, y) {
     this.radius = 15;
     this.health = 10;
     this.speed = 0.05;
-    this.drawRand = Math.random() * 10;
-    let index = getRandomInt(0, COLOURS.length);
+    //just a random variable so the enemies are out of sync
+    this.drawRand = Math.random() * 10000000;
+    let index = getRandomInt(0, COLOURS.length-1);
     this.colour = COLOURS[index];
     
     this.state = stateEnum.IDLE;
@@ -41,10 +44,10 @@ Enemy.prototype.draw = function() {
     context.arc(0, 0, this.radius, 0, 2*Math.PI);
     context.fill();
     
-    //this wasn't what i intended, but it looks kinda cool lol
+    //the result isn't wasn't what i intended, but it looks kinda cool lol
     context.beginPath();
     context.strokeStyle = this.colour;
-    context.moveTo(this.radius, 0);
+    context.moveTo(this.radius*Math.cos(this.drawRand), this.radius*Math.sin(this.drawRand));
     for (let i=0;i<POINT_NUM;i++) {
         let angle = i*2*Math.PI/POINT_NUM * time * 0.001 + this.drawRand;
         
@@ -72,7 +75,7 @@ Enemy.prototype.chooseState = function() {
         if (Math.abs(this.x - player.x) < Math.random()*50+50) {
             this.state = stateEnum.SHOOT;
             //takes time to shoot
-            setTimeout(this.shoot.bind(this), SHOOT_TIME);
+            startTimeout(this.shoot.bind(this), SHOOT_TIME);
         } else if (Math.random() < 0.7) {
             //70/30 to move - could change
             this.state = stateEnum.MOVE
@@ -91,7 +94,7 @@ Enemy.prototype.chooseState = function() {
         } else {
             this.state = stateEnum.IDLE;
             //choose state again
-            setTimeout(this.chooseState.bind(this), IDLE_TIME);
+            startTimeout(this.chooseState.bind(this), IDLE_TIME);
         }
     }
 }
