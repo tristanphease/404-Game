@@ -4,6 +4,7 @@ import {drawHud, insideSpell, insidePause, drawOutline, HUD_WIDTH} from "./hud.j
 import SpellShot from "./spellshot.js";
 import Spell from "./spell.js";
 import Enemy from "./enemy.js";
+import Boss from "./boss.js";
 import {doorColour} from "./doorstate.js";
 import {pauseTime, restartTime, updateTime} from "./time.js";
 import {hideOptions, drawOptions} from "./options.js";
@@ -30,6 +31,9 @@ var enemyShots ;
 
 var spellShots;
 
+var bossFight;
+var boss;
+
 var playing;
 var paused;
 
@@ -51,9 +55,16 @@ function startGame() {
     
     setPlayerPos();
     
-    addSpell(doorColour);
-    
-    addEnemies();
+    if (doorColour === "glitch") {
+        bossFight = true;
+        
+        boss = new Boss();
+    } else {
+        bossFight = false;
+        addSpell(doorColour);
+        
+        addEnemies();
+    }
     
     updateDraw();
     updateInterval = setInterval(updateLogic, 1000/30);
@@ -73,8 +84,12 @@ function addEnemies() {
     for (let i=0;i<enemyNum;i++) {
         let x = Math.random() * (WIDTH - HUD_WIDTH) + HUD_WIDTH;
         let y = Math.random() * PLAYER_SEPARATOR;
-        enemies.push(new Enemy(x, y));
+        createEnemy(x, y);
     }
+}
+
+function createEnemy(x, y) {
+    enemies.push(new Enemy(x, y));
 }
 
 function addEnemyShot(shot) {
@@ -243,6 +258,10 @@ function updateDraw() {
         spellShots[i].draw();
     }
     
+    if (bossFight) {
+        boss.draw();
+    }
+    
     for (let i=0;i<enemies.length;i++) {
         enemies[i].draw();
     }
@@ -301,7 +320,9 @@ function updateLogic() {
         }
     }
     
-    if (enemies.length === 0) {
+    if (bossFight) {
+        boss.update();
+    } else if (enemies.length === 0) {
         endGame();
         onGameEnd();
         return;
@@ -330,4 +351,4 @@ function updateLogic() {
     }
 }
 
-export {startGame, addEnemyShot, getFreeColours};
+export {startGame, addEnemyShot, createEnemy, getFreeColours};

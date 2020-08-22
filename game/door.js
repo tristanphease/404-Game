@@ -16,7 +16,7 @@ function Door(x, y, number, colour) {
     this.number = number;
     if (!colour) {
         this.glitch = true;
-        this.colour = "white";
+        this.colour = "glitch";
     } else {
         this.glitch = false;
         this.colour = colour;
@@ -122,8 +122,8 @@ Door.prototype.draw = function() {
         if (this.glitch) {
             context.fillStyle = glitchPattern;
             
-            circX += Math.floor(Math.cos((time-eff.startTime)*0.001)*(time-eff.startTime)*0.001)*100;
-            circY += Math.floor(Math.sin((time-eff.startTime)*0.001)*(time-eff.startTime)*0.001)*100;
+            circX += Math.floor(Math.cos((time-eff.startTime)*0.001)*(time-eff.startTime)*0.001)*10;
+            circY += Math.floor(Math.sin((time-eff.startTime)*0.001)*(time-eff.startTime)*0.001)*10;
         } else {
             let grad = context.createRadialGradient(eff.pos.x, y, 10, eff.pos.x, y, 30);
             grad.addColorStop(0, this.colour);
@@ -169,7 +169,7 @@ Door.prototype.coordsInside = function(x, y) {
 }
 
 Door.prototype.update = function() {
-    if (Math.random() < 0.1) {
+    if (Math.random() < 0.05) {
         //let x = Math.random()*(DOOR_WIDTH-EFFECT_RADIUS*2)+EFFECT_RADIUS;
         //let y = Math.random()*(DOOR_HEIGHT-EFFECT_RADIUS*2)+EFFECT_RADIUS;
         let x = Math.random()*DOOR_WIDTH;
