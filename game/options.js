@@ -60,19 +60,19 @@ function hideOptions() {
 }
 
 function startInputs() {
-    let x = createNumInput(0, WIDTH-outlineSize, outlineX, 20, "inputX", "Outline X:");
+    let x = createNumSlider(0, WIDTH, outlineX, 20, "inputX", "Outline X:");
     inputX = x.input;
     wrapperX = x.wrapper;
     
-    let y = createNumInput(40, HEIGHT-outlineSize, outlineY, 20, "inputY", "Outline Y:");
+    let y = createNumSlider(0, HEIGHT, outlineY, 20, "inputY", "Outline Y:");
     inputY = y.input;
     wrapperY = y.wrapper;
     
-    let size = createNumInput(50, 1000, outlineSize, 20, "inputSize", "Outline Size:");
+    let size = createNumSlider(50, 1000, outlineSize, 20, "inputSize", "Outline Size:");
     inputSize = size.input;
     wrapperSize = size.wrapper;
     
-    let alpha = createNumInput(0, 1, outlineAlpha, 0.1, "inputAlpha", "Outline Opacity:");
+    let alpha = createNumSlider(0, 1, outlineAlpha, 0.1, "inputAlpha", "Outline Opacity:");
     inputAlpha = alpha.input;
     wrapperAlpha = alpha.wrapper;
 }
@@ -91,7 +91,7 @@ function setWrapperPos(wrapper, x, y) {
     wrapper.style.top = screenCoords.y + "px";
 }
 
-function createNumInput(min, max, value, step, id, labelText) {
+function createNumSlider(min, max, value, step, id, labelText) {
     let wrapper = document.createElement("DIV");
     wrapper.style.position = "absolute";
     document.body.appendChild(wrapper);
@@ -101,15 +101,17 @@ function createNumInput(min, max, value, step, id, labelText) {
     label.innerHTML = labelText;
     wrapper.appendChild(label);
     
+    wrapper.appendChild(document.createElement("BR"));
+    
     let input = document.createElement("INPUT");
-    input.type = "number";
+    input.type = "range";
     input.step = step;
     wrapper.appendChild(input);
     input.min = min;
     input.max = max;
     input.value = value;
     input.id = id;
-    input.onchange = onInputChange;
+    input.oninput = onInputChange;
     
     return {wrapper, input};
 }

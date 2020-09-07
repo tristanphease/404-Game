@@ -25,6 +25,8 @@ const SPELL_MIN_ACCEPT = 50;
 export const PLAYER_SEPARATOR = 400;
 export var spells = [];
 
+const MAX_ENEMIES = 10;
+
 var enemies;
 
 var enemyShots ;
@@ -32,7 +34,7 @@ var enemyShots ;
 var spellShots;
 
 var bossFight;
-var boss;
+export var boss;
 
 var playing;
 var paused;
@@ -89,7 +91,9 @@ function addEnemies() {
 }
 
 function createEnemy(x, y) {
-    enemies.push(new Enemy(x, y));
+    if (enemies.length < MAX_ENEMIES) {
+        enemies.push(new Enemy(x, y));
+    }
 }
 
 function addEnemyShot(shot) {
@@ -119,8 +123,7 @@ function getFreeColours(num) {
     return colours;
 }
 
-function addSpell(colour) {
-    
+export function addSpell(colour) {
     let spell = new Spell(colour);
     spells.push(spell);
     player.generateSpellVar();
@@ -206,8 +209,8 @@ function onMouseMove(e) {
 }
 
 function movePlayer(dX, dY) {
-    player.x = clamp(player.x + dX, HUD_WIDTH+player.size, WIDTH-player.size);
-    player.y = clamp(player.y + dY, PLAYER_SEPARATOR+player.size, HEIGHT-player.size);
+    player.x = clamp(player.x + dX, HUD_WIDTH+player.radius, WIDTH-player.radius);
+    player.y = clamp(player.y + dY, PLAYER_SEPARATOR+player.radius, HEIGHT-player.radius);
 }
 
 function onMouseUp(e) {
@@ -296,32 +299,48 @@ function updateLogic() {
         }
     }
     
-    if (player.health <= 0) {
-        //END GAME YOU LOSE
-    }
-    
+    //loop for enemies
     for (let i=0;i<enemies.length;i++) {
         enemies[i].update();
         
         //check collisions
         for (let j=0;j<spellShots.length;j++) {
             if (enemies[i].collidesWith(spellShots[j])) {
-                spellShots.splice(j, 1);
                 
                 //check if enemy is dead
-                if (enemies[i].health <= 0) {
+                if (!enemies[i].alive) {
                     enemies.splice(i, 1);
                     i--;
                     break;
                 }
                 
+                //remove spellshot
+                spellShots.splice(j, 1);
                 j--;
             }
         }
     }
     
+    //if boss fight is happening
     if (bossFight) {
         boss.update();
+        
+        if (boss.hittingPlayer(player)) {
+            player.takeDamage(6);
+        }
+        
+        //check collisions
+        for (let i=0;i<spellShots.length;i++) {
+            if (boss.collidesWith(spellShots[i])) {
+                spellShots.splice(i, 1);
+                i--;
+            }
+        }
+        
+        if (boss.hittingPlayer(player)) {
+            player.takeDamage(5);
+        }
+        
     } else if (enemies.length === 0) {
         endGame();
         onGameEnd();

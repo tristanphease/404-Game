@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+body {
+    margin: 0;
+    
+}
+
+canvas {
+    display: block;
+}
+
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<script type="module">
+//this file is a simple way to test drawing the boss since it takes a while to test in the game
+import {startTime, updateTime, time, deltaTime} from "./time.js";
+
+const GLITCH_PALETTE = ["#FEFEF3", "#E1B288", "#BFB6C7", "#7D7199", "#1A100E"];
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+var canvas = document.getElementById("canvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+var context = canvas.getContext("2d");
+
+var glitchPattern;
+
+function clearCanvas() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+
+function createGlitchPattern() {
+    let glitchCanvas = document.createElement("CANVAS");
+    let glitchContext = glitchCanvas.getContext("2d");
+
+    glitchCanvas.width = 500;
+    glitchCanvas.height = 500;
+    let xSize = 10;
+    let ySize = 10;
+
+    for (let x=0;x<glitchCanvas.width;x+=xSize) {
+        for (let y=0;y<glitchCanvas.height;y+=ySize) {
+            let index = getRandomInt(0, GLITCH_PALETTE.length-1);
+            glitchContext.fillStyle = GLITCH_PALETTE[index];
+            glitchContext.fillRect(x, y, xSize, ySize);
+        }
+    }
+
+    glitchPattern = context.createPattern(glitchCanvas, "repeat");
+}
+
+createGlitchPattern();
+startTime();
+
+function draw() {
+    updateTime();
+    
+    clearCanvas();
+    
+    let rad = 50;
+    let x = 100;
+    let y = 100;
+    
+    context.save();
+    
+    let startTime = 0;
+    
+    context.translate(x, y);
+    
+    context.beginPath();
+    context.fillStyle = glitchPattern;
+    context.arc(0, 0, rad, 0, 2*Math.PI);
+    context.fill();
+    
+    rad = Math.max(Math.min(rad * (time - startTime)/10000, 10), rad);
+    
+    context.beginPath();
+    let num = 30;
+    let firstX, firstY;
+    for (let i=0;i<=num;i++) {
+        let x = rad * Math.cos(i*2*Math.PI/num)*rand();
+        let y = rad * Math.sin(i*2*Math.PI/num)*rand();
+        if (i === 0) {
+            context.moveTo(x, y);
+            firstX = x;
+            firstY = y;
+        }
+        if (i === num) {
+            x = firstX;
+            y = firstY;
+        }
+        context.lineTo(x, y);
+    }
+    
+    let smallRad = rad * 0.6;
+    for (let i=0;i<=num;i++) {
+        let x = smallRad * Math.cos(i*2*Math.PI/num)*smallRand();
+        let y = smallRad * Math.sin(i*2*Math.PI/num)*smallRand();
+        if (i === 0) {
+            firstX = x;
+            firstY = y;
+        }
+        if (i === num) {
+            x = firstX;
+            y = firstY;
+        }
+        context.lineTo(x, y);
+    }
+    context.fillStyle = "#dd0000";
+    context.fill("evenodd");//actually using this feature lol
+    
+    context.restore();
+    
+    context.globalAlpha = 0.5;
+    
+    context.beginPath();
+    context.arc(x, y, rad, 0, Math.PI, true);
+    context.rect(x - rad, y, rad*2, window.innerHeight-y);
+    context.fillStyle = "#dd0000";
+    context.fill();
+    
+    context.globalAlpha = 1;
+    
+    
+    requestAnimationFrame(draw);
+}
+
+
+function rand() {
+    return Math.random() * 0.5 + 1; //between 1 and 1.5
+}
+
+function smallRand() {
+    return Math.random()*0.8 + 0.6; //between 0.6 and 1.4
+}
+
+draw();
+
+</script>
+</body>
+</html> 

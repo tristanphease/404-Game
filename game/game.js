@@ -1,5 +1,5 @@
 import Player from "./player.js";
-import {startGame} from "./gamestate.js";
+import {startGame, addSpell} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
 import {HUD_WIDTH, initHud} from "./hud.js";
 import {startTime} from "./time.js";
@@ -48,6 +48,7 @@ function start(canvas2d) {
     gameState = gameEnum.DOOR;
     
     roundNum = 6;
+    addSpell("brown");
     
     window.addEventListener("resize", resize);
     

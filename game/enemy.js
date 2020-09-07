@@ -24,13 +24,15 @@ function Enemy(x, y) {
     this.health = 10;
     this.speed = 0.05;
     //just a random variable so the enemies are out of sync
-    this.drawRand = Math.random() * 10000000;
+    this.drawRand = Math.random() * 1000000;
     let index = getRandomInt(0, COLOURS.length-1);
     this.colour = COLOURS[index];
     
     this.state = stateEnum.IDLE;
     this.interval = null;
     this.targetLocation = null;
+    
+    this.alive = true;
     
     this.chooseState();
 }
@@ -47,9 +49,9 @@ Enemy.prototype.draw = function() {
     //the result isn't wasn't what i intended, but it looks kinda cool lol
     context.beginPath();
     context.strokeStyle = this.colour;
-    context.moveTo(this.radius*Math.cos(this.drawRand), this.radius*Math.sin(this.drawRand));
+    context.moveTo(this.radius, 0);
     for (let i=0;i<POINT_NUM;i++) {
-        let angle = i*2*Math.PI/POINT_NUM * time * 0.001 + this.drawRand;
+        let angle = i*2*Math.PI/POINT_NUM * (time + this.drawRand) * 0.001;
         
         let innerX = Math.cos(angle)*this.radius;
         let innerY = Math.sin(angle)*this.radius;
@@ -68,9 +70,17 @@ Enemy.prototype.draw = function() {
     context.translate(-this.x, -this.y);
 }
 
+Enemy.prototype.takeDamage = function(amount) {
+    this.health -= amount;
+    
+    if (this.health <= 0) {
+        this.alive = false;
+    }
+}
+
 Enemy.prototype.chooseState = function() {
     //if still alive
-    if (this.health > 0) {
+    if (this.alive) {
         //if close, shoot
         if (Math.abs(this.x - player.x) < Math.random()*50+50) {
             this.state = stateEnum.SHOOT;
@@ -101,7 +111,7 @@ Enemy.prototype.chooseState = function() {
 
 Enemy.prototype.shoot = function() {
     //if still alive
-    if (this.health > 0) {
+    if (this.alive) {
         let newShot = new EnemyShot(this.x, this.y, this.colour);
         addEnemyShot(newShot);
         this.chooseState();
@@ -132,9 +142,9 @@ Enemy.prototype.collidesWith = function(spellshot) {
     
     if (dist <= this.radius + 5 + spellshot.radius + 5) {
         if (this.colour === spellshot.colour) {
-            this.health -= 5;
+            this.takeDamage(5);
         } else {
-            this.health -= 3;
+            this.takeDamage(3);
         }
         
         //return true so the spellshot can be removed

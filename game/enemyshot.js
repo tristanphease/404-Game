@@ -1,7 +1,7 @@
 import {context} from "./game.js";
 import {time, deltaTime} from "./time.js";
 
-const shotEnum = {STRAIGHT: 0, SINE: 1};
+const shotEnum = {STRAIGHT: 0, SINE: 1, DIAGONAL: 2};
 
 function EnemyShot(x, y, colour) {
     this.x = x;
@@ -19,8 +19,14 @@ function EnemyShot(x, y, colour) {
     this.type = shotEnum[types[Math.floor(types.length * Math.random())]];
     
     if (this.type === shotEnum.SINE) {
+        this.startTime = time;
         this.startX = x;
-        this.varX = 50;
+        this.varX = 40;
+    } else if (this.type === shotEnum.DIAGONAL) {
+        //randomly -1 or 1
+        this.direction = Math.sign(Math.random()-0.5);
+        this.startX = x;
+        this.startTime = time;
     }
 }
 
@@ -49,7 +55,10 @@ EnemyShot.prototype.update = function() {
             
             break;
         case shotEnum.SINE:
-            this.x = Math.sin(time * this.speed * 0.01) * this.varX + this.startX;
+            this.x = Math.sin((time-this.startTime) * this.speed * 0.01) * this.varX + this.startX;
+            break;
+        case shotEnum.DIAGONAL:
+            this.x = this.startX + (time-this.startTime)*this.direction*0.1;
             break;
     }
 }

@@ -127,8 +127,8 @@ function onMouseMove(e) {
 }
 
 function movePlayer(dX, dY) {
-    player.x = clamp(player.x + dX, HUD_WIDTH+player.size, WIDTH-player.size);
-    player.y = clamp(player.y + dY, player.size, HEIGHT-player.size);
+    player.x = clamp(player.x + dX, HUD_WIDTH+player.radius, WIDTH-player.radius);
+    player.y = clamp(player.y + dY, player.radius, HEIGHT-player.radius);
 }
 
 function onMouseUp(e) {

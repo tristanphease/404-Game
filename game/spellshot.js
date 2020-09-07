@@ -19,7 +19,7 @@ SpellShot.prototype.draw = function() {
     
     context.beginPath();
     context.moveTo(this.radius, 0);
-    for (let i=0, j=randStep();i<2*Math.PI;i+=j, j=randStep()) {
+    for (let i=0, j=randStep();i<=2*Math.PI;i+=j, j=randStep()) {
         let height = Math.random()*10+5;//height is between 5 and 15
         
         context.lineTo((this.radius+height)*Math.cos(i+j/2), (this.radius+height)*Math.sin(i+j/2));

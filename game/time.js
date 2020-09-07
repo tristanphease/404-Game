@@ -28,7 +28,11 @@ function updateTime() {
         //alias
         let to = timeouts[i];
         if (time - to.startTime >= to.timeoutTime) {
-            to.func();
+            if (to.parameters) {
+                to.func(...to.parameters);
+            } else {
+                to.func();
+            }
             timeouts.splice(i, 1);
             i--;
         }
@@ -50,8 +54,21 @@ function restartTime() {
     paused = false;
 }
 
-function startTimeout(func, timeoutTime) {
-    timeouts.push({startTime: time, timeoutTime: timeoutTime, func: func});
+function startTimeout(func, timeoutTime, ...parameters) {
+    let timeout = {startTime: time, timeoutTime: timeoutTime, func: func, parameters: parameters};
+    timeouts.push(timeout);
+    return timeout;
 }
 
-export {startTime, updateTime, restartTime, pauseTime, startTimeout};
+function cancelTimeout(timeout) {
+    let index = timeouts.indexOf(timeout);
+    
+    if (index === -1) {
+        return false;
+    }
+    
+    timeouts.splice(index, 1);
+    return true;
+}
+
+export {startTime, updateTime, restartTime, pauseTime, startTimeout, cancelTimeout};

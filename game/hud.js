@@ -24,11 +24,11 @@ export var outlineSize;
 export var outlineAlpha;
 
 function initHud() {
-    outlineSize = 400;
+    outlineSize = 300;
     outlineAlpha = 0.5;
     
-    outlineX = (WIDTH-HUD_WIDTH)/2 + HUD_WIDTH - outlineSize;
-    outlineY = HEIGHT/2 - outlineSize;
+    outlineX = (WIDTH-HUD_WIDTH)/2 + HUD_WIDTH - outlineSize/2;
+    outlineY = HEIGHT/2 - outlineSize/2;
 }
 
 /**
@@ -174,7 +174,7 @@ function drawOutline(index) {
     let xPos = outlineX;
     let yPos = outlineY;
     //transform canvas for this
-    context.translate(xPos, yPos);
+    context.translate(xPos-width/2, yPos-height/2);
     //make it width and height
     context.scale(outlineSize/SPELL_SIZE, outlineSize/SPELL_SIZE);
     
@@ -182,7 +182,7 @@ function drawOutline(index) {
     
     //undo transformations
     context.scale(SPELL_SIZE/outlineSize, SPELL_SIZE/outlineSize);
-    context.translate(-xPos, -yPos);
+    context.translate(-xPos+width/2, -yPos+height/2);
     
     context.globalAlpha = 1;
 }
