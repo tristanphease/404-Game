@@ -4,4 +4,5 @@ improve spell detection - works well if lots of plyer points, so maybe interpola
 improve options?
 add better commenting?
 improve gameplay generally
-    -
+get healed between each round
+boss death animation

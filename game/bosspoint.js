@@ -109,7 +109,7 @@ BossPoint.prototype.collidesWith = function(spellshot) {
         //check collisions for getting hit
         if (Math.hypot(pos.x - spellshot.x, pos.y - spellshot.y) <= this.radius + spellshot.radius) {
             //boss takes damage
-            this.boss.takeDamage(4);
+            this.boss.takeDamage(3);
             return true;
         }
     } else if (this.state === BOSS_AI_ENUM.SHOOTING) {

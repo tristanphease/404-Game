@@ -10,10 +10,9 @@ const OPEN_AMOUNT = 40;
 const EFFECT_RADIUS = 40;
 
 //note x and y are the centre of the door to be consistent with other objects
-function Door(x, y, number, colour) {
+function Door(x, y, colour) {
     this.x = x;
     this.y = y;
-    this.number = number;
     if (!colour) {
         this.glitch = true;
         this.colour = "glitch";
@@ -31,7 +30,6 @@ function Door(x, y, number, colour) {
  * Draws a door
  */
 Door.prototype.draw = function() {
-    
     
     context.beginPath();
     context.rect(this.x-DOOR_WIDTH/2, this.y-DOOR_HEIGHT/2, DOOR_WIDTH, DOOR_HEIGHT);

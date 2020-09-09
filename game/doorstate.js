@@ -33,29 +33,32 @@ function startDoor() {
     
     let glitch;
     
+    //get number of glitch doors that take player to the final battle
     if (roundNum < 6) {
         glitch = 0;
-    } else if (roundNum == 6) {
-        glitch = 1;
-    } else if (roundNum == 7) {
-        glitch = 2;
-    } else if (roundNum == 8) {
-        glitch = 3;
+    } else {
+        glitch = roundNum - 5;
     }
     
     let colours = getFreeColours(3-glitch);
     
+    //set random values to glitch
     for (let i=0, len=colours.length;i<3-len;i++) {
-        colours[getRandomInt(0, colours.length)] = null;
+        let index = getRandomInt(0, 2);
+        if (colours[index] !== null) {
+            colours.splice(index, 0, null);
+        } else {
+            i--;
+        }
     }
     
-    let door1 = new Door(HUD_WIDTH + width, 200, 1, colours[0]);
+    let door1 = new Door(HUD_WIDTH + width, 200, colours[0]);
     doors.push(door1);
     
-    let door2 = new Door(HUD_WIDTH + width*2, 200, 2, colours[1]);
+    let door2 = new Door(HUD_WIDTH + width*2, 200, colours[1]);
     doors.push(door2);
     
-    let door3 = new Door(HUD_WIDTH + width*3, 200, 3, colours[2]);
+    let door3 = new Door(HUD_WIDTH + width*3, 200, colours[2]);
     doors.push(door3);
     
     paused = false;

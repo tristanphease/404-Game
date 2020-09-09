@@ -13,7 +13,7 @@ export const BOSS_AI_ENUM = {MOVE: 0, SHOOTING: 1};
 
 function Boss() {
     this.maxHealth = 50;
-    this.health = this.maxHealth - 24;
+    this.health = this.maxHealth;
     this.currentStage = BOSS_STAGE_ENUM.PORTALS;
     this.portals = [];
 }
@@ -212,7 +212,6 @@ Boss.prototype.collidesWith = function(spellshot) {
     } else if (this.currentStage === BOSS_STAGE_ENUM.BOSS) {
         for (let i=0;i<this.points.length;i++) {
             if (this.points[i].collidesWith(spellshot)) {
-                this.takeDamage(4);
                 return true;
             }
         }

@@ -1,11 +1,12 @@
 import Player from "./player.js";
 import {startGame, addSpell} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
+import {MENUSTATE, startMenu} from "./menustate.js";
 import {HUD_WIDTH, initHud} from "./hud.js";
 import {startTime} from "./time.js";
 import {startOptions, setInputPositions} from "./options.js";
 
-export const COLOURS = ["red", "green", "blue", "orange", "yellow", "purple", "pink", "brown"];
+export const COLOURS = ["red", "green", "blue", "orange", "orangered", "purple", "darkviolet", "brown"];
 
 export const GLITCH_PALETTE = ["#FEFEF3", "#E1B288", "#BFB6C7", "#7D7199", "#1A100E"];
 
@@ -35,22 +36,30 @@ function start(canvas2d) {
     
     initHud();
     
+    startTime();
+    
     startOptions();
+    
+    generateGlitchPattern();
     
     resize();
     
-    player = new Player();
+    window.addEventListener("resize", resize);
     
-    generateGlitchPattern();
+    //stop context menu
+    window.addEventListener("contextmenu", (e) => {e.preventDefault();});
+    
+    startMenu(MENUSTATE.START);
+}
+
+function initGame() {
+    player = new Player();
     
     startTime();
     
     gameState = gameEnum.DOOR;
     
-    roundNum = 6;
-    addSpell("brown");
-    
-    window.addEventListener("resize", resize);
+    roundNum = 1;
     
     startDoor();
 }
@@ -79,8 +88,6 @@ function generateGlitchPattern() {
 function onDoorEnd() {
     gameState = gameEnum.GAME;
     
-    roundNum++;
-    
     startGame();
 }
 
@@ -88,6 +95,8 @@ function onGameEnd() {
     gameState = gameEnum.DOOR;
     
     startDoor();
+    
+    roundNum++;
 }
 
 function onMenuEnd() {
@@ -173,4 +182,4 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export {start, onDoorEnd, onGameEnd, onMenuEnd, clearCanvas, setPlayerPos, getRandomInt, convertCoords, convertCoordsBack, clamp};
+export {start, initGame, onDoorEnd, onGameEnd, onMenuEnd, clearCanvas, setPlayerPos, getRandomInt, convertCoords, convertCoordsBack, clamp};

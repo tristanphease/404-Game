@@ -1,0 +1,10 @@
+{
+  "name": "Doors",
+  "version": "1.0.0",
+  "devDependencies": {
+    "grunt": "~1.3.0",
+    "grunt-terser": "~1.0.0",
+    "grunt-rollup": "~11.4.0",
+    "grunt-contrib-compress": "~1.6.0"
+  }
+}
