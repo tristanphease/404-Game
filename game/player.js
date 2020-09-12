@@ -1,5 +1,5 @@
 import {context} from "./game.js";
-import {spells} from "./gamestate.js";
+import {spells, playerLoses} from "./gamestate.js";
 import {time} from "./time.js";
 
 function Player() {
@@ -61,8 +61,12 @@ Player.prototype.takeDamage = function(amount) {
     this.health -= amount;
     
     if (this.health <= 0) {
-        
+        playerLoses();
     }
+}
+
+Player.prototype.heal = function(amount) {
+    this.health = Math.min(this.maxHealth, this.health + amount);
 }
 
 /**

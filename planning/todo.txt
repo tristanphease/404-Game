@@ -1,8 +1,9 @@
 TODO if time:
 
-improve spell detection - works well if lots of plyer points, so maybe interpolate points?
+improve spell detection - works well if lots of player points, so maybe interpolate points?
 improve options?
 add better commenting?
-improve gameplay generally
 get healed between each round
 boss death animation
+improve menu
+add basic music/audio

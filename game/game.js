@@ -1,5 +1,5 @@
 import Player from "./player.js";
-import {startGame, addSpell} from "./gamestate.js";
+import {startGame} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
 import {MENUSTATE, startMenu} from "./menustate.js";
 import {HUD_WIDTH, initHud} from "./hud.js";
@@ -96,6 +96,8 @@ function onGameEnd() {
     
     startDoor();
     
+    //heal player
+    player.heal(10);
     roundNum++;
 }
 
@@ -103,6 +105,18 @@ function onMenuEnd() {
     gameState = gameEnum.DOOR;
     
     startDoor();
+}
+
+function onPlayerWin() {
+    gameState = gameEnum.MENU;
+    
+    startMenu(MENUSTATE.WIN);
+}
+
+function onPlayerLoss() {
+    gameState = gameEnum.MENU;
+    
+    startMenu(MENUSTATE.LOSE);
 }
 
 /**
@@ -182,4 +196,5 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export {start, initGame, onDoorEnd, onGameEnd, onMenuEnd, clearCanvas, setPlayerPos, getRandomInt, convertCoords, convertCoordsBack, clamp};
+export {start, initGame, onDoorEnd, onGameEnd, onMenuEnd, onPlayerWin, onPlayerLoss,
+clearCanvas, setPlayerPos, getRandomInt, convertCoords, convertCoordsBack, clamp};

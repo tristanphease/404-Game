@@ -144,7 +144,7 @@ function rand() {
 }
 
 function smallRand() {
-    return Math.random()*0.8 + 0.6; //between 0.6 and 1.4
+    return Math.random() * 0.8 + 0.6; //between 0.6 and 1.4
 }
 
 export default BossPoint;

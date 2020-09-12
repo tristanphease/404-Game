@@ -1,6 +1,6 @@
 import {context, player, GLITCH_PALETTE, glitchPattern, getRandomInt, WIDTH, HEIGHT} from "./game.js";
 import {HUD_WIDTH} from "./hud.js";
-import {PLAYER_SEPARATOR, spells} from "./gamestate.js";
+import {PLAYER_SEPARATOR, spells, playerWins} from "./gamestate.js";
 import {time, deltaTime, startTimeout} from "./time.js";
 import Point from "./point.js";
 import Portal, {PORTAL_DIVISION_SIZE} from "./portal.js";
@@ -11,6 +11,9 @@ export const BOSS_STAGE_ENUM = {PORTALS: 0, BOSS: 1, DEAD: 2};
 
 export const BOSS_AI_ENUM = {MOVE: 0, SHOOTING: 1};
 
+/**
+ * Constructs the boss
+ */
 function Boss() {
     this.maxHealth = 50;
     this.health = this.maxHealth;
@@ -53,6 +56,9 @@ Boss.prototype.createPortal = function() {
     
 }
 
+/**
+ * Draws the boss
+ */
 Boss.prototype.draw = function() {
     
     for (let i=0;i<this.portals.length;i++) {
@@ -71,6 +77,36 @@ Boss.prototype.draw = function() {
         for (let i=0;i<this.points.length;i++) {
             this.points[i].draw();
         }
+    } else if (this.currentStage === BOSS_STAGE_ENUM.DEAD) {
+        //draw boss death animation
+        
+        let xRad = this.width * (this.startTime - time + this.animTime) / animTime;
+        let yRad = this.height * (this.startTime - time + this.animTime) / animTime;
+        
+        context.save();
+        
+        context.translate(this.x, this.y);
+        
+        context.beginPath();
+        let num = 10;
+        
+        let firstAng = 0.55;
+        let secondAng = 1.1;
+        
+        let rot = (time - this.startTime) * 0.001;
+        
+        context.moveTo(xRad, 0);
+        for (let i=0;i<=num;i++) {
+            
+            context.quadraticCurveTo(xRad*2*Math.cos(rot*(i+firstAng)/num*2*Math.PI), yRad*2*Math.sin(rot*(i+firstAng)/num*2*Math.PI), 
+                                     xRad*1.5*Math.cos(rot*(i+secondAng)/num*2*Math.PI), yRad*1.5*Math.sin(rot*(i+secondAng)/num*2*Math.PI));
+            context.lineTo(xRad*Math.cos((i+1)/num*2*Math.PI), yRad*Math.sin((i+1)/num*2*Math.PI));
+        }
+        
+        context.fillStyle = glitchPattern;
+        context.fill();
+        
+        context.restore();
     }
     
     //draw boss health bar here
@@ -101,6 +137,9 @@ Boss.prototype.draw = function() {
     context.globalAlpha = 1;
 }
 
+/**
+ * Does the update loop for the boss
+ */
 Boss.prototype.update = function() {
     switch (this.currentStage) {
         case BOSS_STAGE_ENUM.PORTALS:
@@ -136,6 +175,9 @@ Boss.prototype.update = function() {
     }
 }
 
+/**
+ * Deals damage to the boss
+ */
 Boss.prototype.takeDamage = function(amount) {
     this.health -= amount;
     
@@ -143,11 +185,14 @@ Boss.prototype.takeDamage = function(amount) {
         this.startBossState();
     }
     
-    if (this.health <= 0) {
-        
+    if (this.currentStage === BOSS_STAGE_ENUM.BOSS && this.health <= 0) {
+        this.startDeathState();
     }
 }
 
+/**
+ * Changes the ai action to the one passed in during the boss stage
+ */
 Boss.prototype.changeAction = function(newAction) {
     //don't choose if dead
     if (this.currentStage === BOSS_STAGE_ENUM.BOSS) {
@@ -178,13 +223,16 @@ Boss.prototype.changeAction = function(newAction) {
                     this.points.push(new BossPoint(x, y, radius, colour, this));
                 }
                 
-                startTimeout(this.changeAction.bind(this), 10000, BOSS_STAGE_ENUM.MOVE);
+                startTimeout(this.changeAction.bind(this), 10000, BOSS_AI_ENUM.MOVE);
                 
                 break;
         }
     }
 }
 
+/**
+ * Checks if the boss's points are hitting the player
+ */
 Boss.prototype.hittingPlayer = function(player) {
     if (this.currentStage === BOSS_STAGE_ENUM.BOSS) {
         for (let i=0;i<this.points.length;i++) {
@@ -195,6 +243,9 @@ Boss.prototype.hittingPlayer = function(player) {
     }
 }
 
+/**
+ * Checks whether the boss/portals collide with a spellshot
+ */
 Boss.prototype.collidesWith = function(spellshot) {
     if (this.currentStage === BOSS_STAGE_ENUM.PORTALS) {
         for (let i=0;i<this.portals.length;i++) {
@@ -218,6 +269,9 @@ Boss.prototype.collidesWith = function(spellshot) {
     }
 }
 
+/**
+ * Starts the main boss state
+ */
 Boss.prototype.startBossState = function() {
     this.currentStage = BOSS_STAGE_ENUM.BOSS;
     
@@ -236,6 +290,21 @@ Boss.prototype.startBossState = function() {
     this.aiAction = null;
     
     this.changeAction(BOSS_AI_ENUM.MOVE);
+}
+
+/**
+ * Begins the death state
+ */
+Boss.prototype.startDeathState = function() {
+    this.currentStage = BOSS_STAGE_ENUM.DEAD;
+    
+    //clear points
+    this.points = [];
+    
+    this.startTime = time;
+    this.animTime = 10000;
+    
+    startTimeout(playerWins, this.animTime);
 }
 
 export default Boss;

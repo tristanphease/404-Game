@@ -511,12 +511,15 @@ function EnemyShot(x, y, colour) {
         this.varX = 40;
     } else if (this.type === shotEnum.DIAGONAL) {
         //randomly -1 or 1
-        this.direction = Math.sign(Math.random()-0.5);
+        this.direction = Math.sign(Math.random()-0.5)*0.5;
         this.startX = x;
         this.startTime = time;
     }
 }
 
+/**
+ * Draws the enemy shot
+ */
 EnemyShot.prototype.draw = function() {
     
     let grad = context.createRadialGradient(this.x, this.y, this.radius/2, this.x, this.y, this.radius);
@@ -922,7 +925,7 @@ function rand() {
 }
 
 function smallRand() {
-    return Math.random()*0.8 + 0.6; //between 0.6 and 1.4
+    return Math.random() * 0.8 + 0.6; //between 0.6 and 1.4
 }
 
 //different stages
@@ -930,6 +933,9 @@ const BOSS_STAGE_ENUM = {PORTALS: 0, BOSS: 1, DEAD: 2};
 
 const BOSS_AI_ENUM = {MOVE: 0, SHOOTING: 1};
 
+/**
+ * Constructs the boss
+ */
 function Boss() {
     this.maxHealth = 50;
     this.health = this.maxHealth;
@@ -972,6 +978,9 @@ Boss.prototype.createPortal = function() {
     
 };
 
+/**
+ * Draws the boss
+ */
 Boss.prototype.draw = function() {
     
     for (let i=0;i<this.portals.length;i++) {
@@ -990,6 +999,36 @@ Boss.prototype.draw = function() {
         for (let i=0;i<this.points.length;i++) {
             this.points[i].draw();
         }
+    } else if (this.currentStage === BOSS_STAGE_ENUM.DEAD) {
+        //draw boss death animation
+        
+        let xRad = this.width * (this.startTime - time + this.animTime) / animTime;
+        let yRad = this.height * (this.startTime - time + this.animTime) / animTime;
+        
+        context.save();
+        
+        context.translate(this.x, this.y);
+        
+        context.beginPath();
+        let num = 10;
+        
+        let firstAng = 0.55;
+        let secondAng = 1.1;
+        
+        let rot = (time - this.startTime) * 0.001;
+        
+        context.moveTo(xRad, 0);
+        for (let i=0;i<=num;i++) {
+            
+            context.quadraticCurveTo(xRad*2*Math.cos(rot*(i+firstAng)/num*2*Math.PI), yRad*2*Math.sin(rot*(i+firstAng)/num*2*Math.PI), 
+                                     xRad*1.5*Math.cos(rot*(i+secondAng)/num*2*Math.PI), yRad*1.5*Math.sin(rot*(i+secondAng)/num*2*Math.PI));
+            context.lineTo(xRad*Math.cos((i+1)/num*2*Math.PI), yRad*Math.sin((i+1)/num*2*Math.PI));
+        }
+        
+        context.fillStyle = glitchPattern;
+        context.fill();
+        
+        context.restore();
     }
     
     //draw boss health bar here
@@ -1020,6 +1059,9 @@ Boss.prototype.draw = function() {
     context.globalAlpha = 1;
 };
 
+/**
+ * Does the update loop for the boss
+ */
 Boss.prototype.update = function() {
     switch (this.currentStage) {
         case BOSS_STAGE_ENUM.PORTALS:
@@ -1055,6 +1097,9 @@ Boss.prototype.update = function() {
     }
 };
 
+/**
+ * Deals damage to the boss
+ */
 Boss.prototype.takeDamage = function(amount) {
     this.health -= amount;
     
@@ -1062,9 +1107,14 @@ Boss.prototype.takeDamage = function(amount) {
         this.startBossState();
     }
     
-    if (this.health <= 0) ;
+    if (this.currentStage === BOSS_STAGE_ENUM.BOSS && this.health <= 0) {
+        this.startDeathState();
+    }
 };
 
+/**
+ * Changes the ai action to the one passed in during the boss stage
+ */
 Boss.prototype.changeAction = function(newAction) {
     //don't choose if dead
     if (this.currentStage === BOSS_STAGE_ENUM.BOSS) {
@@ -1095,13 +1145,16 @@ Boss.prototype.changeAction = function(newAction) {
                     this.points.push(new BossPoint(x, y, radius, colour, this));
                 }
                 
-                startTimeout(this.changeAction.bind(this), 10000, BOSS_STAGE_ENUM.MOVE);
+                startTimeout(this.changeAction.bind(this), 10000, BOSS_AI_ENUM.MOVE);
                 
                 break;
         }
     }
 };
 
+/**
+ * Checks if the boss's points are hitting the player
+ */
 Boss.prototype.hittingPlayer = function(player) {
     if (this.currentStage === BOSS_STAGE_ENUM.BOSS) {
         for (let i=0;i<this.points.length;i++) {
@@ -1112,6 +1165,9 @@ Boss.prototype.hittingPlayer = function(player) {
     }
 };
 
+/**
+ * Checks whether the boss/portals collide with a spellshot
+ */
 Boss.prototype.collidesWith = function(spellshot) {
     if (this.currentStage === BOSS_STAGE_ENUM.PORTALS) {
         for (let i=0;i<this.portals.length;i++) {
@@ -1135,6 +1191,9 @@ Boss.prototype.collidesWith = function(spellshot) {
     }
 };
 
+/**
+ * Starts the main boss state
+ */
 Boss.prototype.startBossState = function() {
     this.currentStage = BOSS_STAGE_ENUM.BOSS;
     
@@ -1155,16 +1214,30 @@ Boss.prototype.startBossState = function() {
     this.changeAction(BOSS_AI_ENUM.MOVE);
 };
 
+/**
+ * Begins the death state
+ */
+Boss.prototype.startDeathState = function() {
+    this.currentStage = BOSS_STAGE_ENUM.DEAD;
+    
+    //clear points
+    this.points = [];
+    
+    this.startTime = time;
+    this.animTime = 10000;
+    
+    startTimeout(playerWins, this.animTime);
+};
+
 const DOOR_WIDTH = 170;
 const DOOR_HEIGHT = 280;
 
 const OPEN_AMOUNT = 40;
 
 //note x and y are the centre of the door to be consistent with other objects
-function Door(x, y, number, colour) {
+function Door(x, y, colour) {
     this.x = x;
     this.y = y;
-    this.number = number;
     if (!colour) {
         this.glitch = true;
         this.colour = "glitch";
@@ -1182,7 +1255,6 @@ function Door(x, y, number, colour) {
  * Draws a door
  */
 Door.prototype.draw = function() {
-    
     
     context.beginPath();
     context.rect(this.x-DOOR_WIDTH/2, this.y-DOOR_HEIGHT/2, DOOR_WIDTH, DOOR_HEIGHT);
@@ -1503,13 +1575,13 @@ function startDoor() {
         }
     }
     
-    let door1 = new Door(HUD_WIDTH + width, 200, 1, colours[0]);
+    let door1 = new Door(HUD_WIDTH + width, 200, colours[0]);
     doors.push(door1);
     
-    let door2 = new Door(HUD_WIDTH + width*2, 200, 2, colours[1]);
+    let door2 = new Door(HUD_WIDTH + width*2, 200, colours[1]);
     doors.push(door2);
     
-    let door3 = new Door(HUD_WIDTH + width*3, 200, 3, colours[2]);
+    let door3 = new Door(HUD_WIDTH + width*3, 200, colours[2]);
     doors.push(door3);
     
     paused$1 = false;
@@ -1669,6 +1741,9 @@ function initVars$1() {
     mouseType$1 = mouseEnum$1.NONE;
 }
 
+/**
+ * Starts this state
+ */
 function startGame() {
     addEvents$1();
     
@@ -1691,6 +1766,19 @@ function startGame() {
     updateInterval$1 = setInterval(updateLogic$1, 1000/30);
 }
 
+function playerWins() {
+    endGame();
+    onPlayerWin();
+}
+
+function playerLoses() {
+    endGame();
+    onPlayerLoss();
+}
+
+/**
+ * Cleans up this state
+ */
 function endGame() {
     removeEvents$1();
     
@@ -1778,7 +1866,7 @@ function onMouseDown$1(e) {
     if (player.coordsInside(mouse.x, mouse.y) && !paused$2) {
         mouseType$1 = mouseEnum$1.MOVE;
     } else if (spellNum != -1 && !paused$2) {
-        console.log(spellNum);
+        //console.log(spellNum);
         if (showSpell) {
             if (spellNum == spellShown) {
                 //toggle off
@@ -1849,7 +1937,7 @@ function onMouseUp$1(e) {
             for (let i=0;i<spells.length;i++) {
                 let spellNum = spells[i].matches(spellPoints);
                 
-                console.log(i, spellNum);
+                //console.log(i, spellNum);
                 
                 if (spellNum < lowestNum) {
                     lowestNum = spellNum;
@@ -1859,7 +1947,7 @@ function onMouseUp$1(e) {
             
             //could change min accept number
             if (lowestNum < SPELL_MIN_ACCEPT) {
-                console.log("accepted - ", lowestIndex);
+                //console.log("accepted - ", lowestIndex);
                 
                 addSpellShot(lowestIndex);
             }
@@ -1870,6 +1958,9 @@ function onMouseUp$1(e) {
     
 }
 
+/**
+ * Draws the game
+ */
 function updateDraw$1() {
     clearCanvas();
     drawHud();
@@ -1905,6 +1996,9 @@ function updateDraw$1() {
     }
 }
 
+/**
+ * Updates all the game objects
+ */
 function updateLogic$1() {
     updateTime();
     
@@ -2047,7 +2141,13 @@ Player.prototype.draw = function() {
 Player.prototype.takeDamage = function(amount) {
     this.health -= amount;
     
-    if (this.health <= 0) ;
+    if (this.health <= 0) {
+        playerLoses();
+    }
+};
+
+Player.prototype.heal = function(amount) {
+    this.health = Math.min(this.maxHealth, this.health + amount);
 };
 
 /**
@@ -2076,7 +2176,161 @@ Player.prototype.update = function() {
     
 };
 
-const COLOURS = ["red", "green", "blue", "orange", "yellow", "purple", "pink", "brown"];
+const MENUSTATE = {START: 0, WIN: 1, LOSE: 2};
+
+var menuState;
+
+var menuPlaying;
+
+var menuDoors;
+
+function startMenu(state) {
+    
+    menuState = state;
+    menuPlaying = true;
+    
+    menuDoors = [];
+    
+    document.addEventListener("mousedown", onMouseDown$2);
+    
+    updateDraw$2();
+}
+
+function updateDraw$2() {
+    
+    clearCanvas();
+    
+    //doing all the logic stuff in draw since it isn't that important for the menu
+    updateTime();
+    
+    if (Math.random() < 0.005) {
+        menuDoors.push(new MenuDoor());
+    }
+    
+    for (let i=0;i<menuDoors.length;i++) {
+        menuDoors[i].door.update();
+        menuDoors[i].door.x += 0.3;
+        menuDoors[i].door.y -= 0.3;
+        
+        //clean up
+        if (menuDoors[i].door.x > WIDTH + menuDoors[i].door.width || menuDoors[i].door.y < -menuDoors[i].door.height) {
+            menuDoors.splice(i, 1);
+            i--;
+        } else {
+            menuDoors[i].draw();
+        }
+    }
+    
+    context.font = "50px Verdana";
+    let titleText;
+    let playText;
+    
+    switch (menuState) {
+        case MENUSTATE.START:
+            titleText = "Doors";
+            playText = "Click to play";
+            break;
+        case MENUSTATE.WIN:
+            titleText = "You won!";
+            playText = "Click to play again";
+            break;
+        case MENUSTATE.LOSE:
+            titleText = "You lost";
+            playText = "Click to play again";
+            break;
+    }
+    
+    let textWidth = context.measureText(titleText).width;
+    
+    let x = WIDTH/2-textWidth/2;
+    let y = HEIGHT/3;
+    
+    context.beginPath();
+    context.rect(x - 10, y - 50, textWidth + 20, 60);
+    context.strokeStyle = "#000000";
+    context.stroke();
+    context.fillStyle = "#ffffff";
+    context.fill();
+    context.fillStyle = "#000000";
+    context.fillText(titleText, x, y);
+    
+    let playTextWidth = context.measureText(playText).width;
+    
+    x = WIDTH/2-playTextWidth/2;
+    y = HEIGHT*2/3;
+    context.beginPath();
+    context.rect(x - 10, y - 50, playTextWidth + 20, 60);
+    context.strokeStyle = "#000000";
+    context.stroke();
+    context.fillStyle = "#ffffff";
+    context.fill();
+    context.fillStyle = "#000000";
+    context.fillText(playText, x, y);
+    
+    if (menuPlaying) {
+        requestAnimationFrame(updateDraw$2);
+    }
+}
+
+function onMouseDown$2(e) {
+    if (e.button === 0) {
+        exitMenu();
+    }
+}
+
+function exitMenu() {
+    menuPlaying = false;
+    
+    menuDoors = [];
+    
+    document.removeEventListener("mousedown", onMouseDown$2);
+    
+    initGame();
+}
+
+function MenuDoor() {
+    this.rotation = Math.random()*2*Math.PI;
+    
+    let colour;
+    if (Math.random() < 0.01) {
+        colour = null;
+    } else {
+        let index = getRandomInt(0, COLOURS.length-1);
+        colour = COLOURS[index];
+    }
+    
+    let x;
+    let y;
+    
+    if (Math.random() < 0.5) {
+        x = -DOOR_WIDTH;
+        y = Math.random()*(HEIGHT-300) + 300;
+    } else {
+        x = Math.random()*(WIDTH-300);
+        y = HEIGHT+DOOR_HEIGHT;
+    }
+    
+    this.door = new Door(x, y, colour);
+    
+}
+
+MenuDoor.prototype.draw = function() {
+    
+    context.save();
+    
+    context.translate(this.door.x, this.door.y);
+    
+    context.rotate(this.rotation);
+    
+    context.translate(-this.door.x, -this.door.y);
+    
+    this.door.draw();
+    
+    context.restore();
+    
+};
+
+const COLOURS = ["red", "green", "blue", "orange", "orangered", "purple", "darkviolet", "brown"];
 
 const GLITCH_PALETTE = ["#FEFEF3", "#E1B288", "#BFB6C7", "#7D7199", "#1A100E"];
 
@@ -2106,22 +2360,30 @@ function start(canvas2d) {
     
     initHud();
     
+    startTime();
+    
     startOptions();
+    
+    generateGlitchPattern();
     
     resize();
     
-    player = new Player();
+    window.addEventListener("resize", resize);
     
-    generateGlitchPattern();
+    //stop context menu
+    window.addEventListener("contextmenu", (e) => {e.preventDefault();});
+    
+    startMenu(MENUSTATE.START);
+}
+
+function initGame() {
+    player = new Player();
     
     startTime();
     
     gameState = gameEnum.DOOR;
     
     roundNum = 1;
-    //addSpell("brown");
-    
-    window.addEventListener("resize", resize);
     
     startDoor();
 }
@@ -2158,6 +2420,8 @@ function onGameEnd() {
     
     startDoor();
     
+    //heal player
+    player.heal(10);
     roundNum++;
 }
 
@@ -2165,6 +2429,18 @@ function onMenuEnd() {
     gameState = gameEnum.DOOR;
     
     startDoor();
+}
+
+function onPlayerWin() {
+    gameState = gameEnum.MENU;
+    
+    startMenu(MENUSTATE.WIN);
+}
+
+function onPlayerLoss() {
+    gameState = gameEnum.MENU;
+    
+    startMenu(MENUSTATE.LOSE);
 }
 
 /**
@@ -2244,4 +2520,4 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export {start };
+export { COLOURS, GLITCH_PALETTE, HEIGHT, WIDTH, canvas, clamp, clearCanvas, context, convertCoords, convertCoordsBack, gameEnum, gameState, getRandomInt, glitchPattern, initGame, onDoorEnd, onGameEnd, onMenuEnd, onPlayerLoss, onPlayerWin, player, roundNum, setPlayerPos, start };

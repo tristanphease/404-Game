@@ -19,7 +19,7 @@ canvas {
 
 <script type="module">
 //this file is a simple way to test drawing the boss since it takes a while to test in the game
-import {startTime, updateTime, time, deltaTime} from "./time.js";
+import {startTime, updateTime, time, deltaTime} from "./../game/time.js";
 
 const GLITCH_PALETTE = ["#FEFEF3", "#E1B288", "#BFB6C7", "#7D7199", "#1A100E"];
 
@@ -62,87 +62,47 @@ function createGlitchPattern() {
 createGlitchPattern();
 startTime();
 
+var beginTime = time;
+
 function draw() {
     updateTime();
     
     clearCanvas();
     
-    let rad = 50;
-    let x = 100;
-    let y = 100;
+    let xRad = 100 * (beginTime - time + 10000) * 0.0001;
+    let yRad = 50 * (beginTime - time + 10000) * 0.0001;
+    let x = 300;
+    let y = 300;
     
     context.save();
-    
-    let startTime = 0;
     
     context.translate(x, y);
     
     context.beginPath();
+    let num = 10;
+    
+    let firstAng = 0.55;
+    let secondAng = 1.1;
+    
+    let rot = (time - beginTime) * 0.001;
+    
+    context.moveTo(xRad, 0);
+    for (let i=0;i<=num;i++) {
+        
+        context.quadraticCurveTo(xRad*2*Math.cos(rot*(i+firstAng)/num*2*Math.PI), yRad*2*Math.sin(rot*(i+firstAng)/num*2*Math.PI), 
+                                 xRad*1.5*Math.cos(rot*(i+secondAng)/num*2*Math.PI), yRad*1.5*Math.sin(rot*(i+secondAng)/num*2*Math.PI));
+        context.lineTo(xRad*Math.cos((i+1)/num*2*Math.PI), yRad*Math.sin((i+1)/num*2*Math.PI));
+    }
+    
     context.fillStyle = glitchPattern;
-    context.arc(0, 0, rad, 0, 2*Math.PI);
     context.fill();
-    
-    rad = Math.max(Math.min(rad * (time - startTime)/10000, 10), rad);
-    
-    context.beginPath();
-    let num = 30;
-    let firstX, firstY;
-    for (let i=0;i<=num;i++) {
-        let x = rad * Math.cos(i*2*Math.PI/num)*rand();
-        let y = rad * Math.sin(i*2*Math.PI/num)*rand();
-        if (i === 0) {
-            context.moveTo(x, y);
-            firstX = x;
-            firstY = y;
-        }
-        if (i === num) {
-            x = firstX;
-            y = firstY;
-        }
-        context.lineTo(x, y);
-    }
-    
-    let smallRad = rad * 0.6;
-    for (let i=0;i<=num;i++) {
-        let x = smallRad * Math.cos(i*2*Math.PI/num)*smallRand();
-        let y = smallRad * Math.sin(i*2*Math.PI/num)*smallRand();
-        if (i === 0) {
-            firstX = x;
-            firstY = y;
-        }
-        if (i === num) {
-            x = firstX;
-            y = firstY;
-        }
-        context.lineTo(x, y);
-    }
-    context.fillStyle = "#dd0000";
-    context.fill("evenodd");//actually using this feature lol
     
     context.restore();
-    
-    context.globalAlpha = 0.5;
-    
-    context.beginPath();
-    context.arc(x, y, rad, 0, Math.PI, true);
-    context.rect(x - rad, y, rad*2, window.innerHeight-y);
-    context.fillStyle = "#dd0000";
-    context.fill();
-    
-    context.globalAlpha = 1;
     
     
     requestAnimationFrame(draw);
 }
 
-
-function rand() {
-    return Math.random() * 0.5 + 1; //between 1 and 1.5
-}
-
-function smallRand() {
-    return Math.random()*0.8 + 0.6; //between 0.6 and 1.4
-}
 
 draw();
 

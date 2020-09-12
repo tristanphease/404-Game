@@ -1,4 +1,4 @@
-import {player, onGameEnd, clamp, clearCanvas, getRandomInt, roundNum, COLOURS, WIDTH, HEIGHT, setPlayerPos, convertCoords} from "./game.js";
+import {player, onGameEnd, onPlayerWin, onPlayerLoss, clamp, clearCanvas, getRandomInt, roundNum, COLOURS, WIDTH, HEIGHT, setPlayerPos, convertCoords} from "./game.js";
 import Point from "./point.js";
 import {drawHud, insideSpell, insidePause, drawOutline, HUD_WIDTH} from "./hud.js";
 import SpellShot from "./spellshot.js";
@@ -50,6 +50,9 @@ function initVars() {
     mouseType = mouseEnum.NONE;
 }
 
+/**
+ * Starts this state
+ */
 function startGame() {
     addEvents();
     
@@ -72,6 +75,19 @@ function startGame() {
     updateInterval = setInterval(updateLogic, 1000/30);
 }
 
+function playerWins() {
+    endGame();
+    onPlayerWin();
+}
+
+function playerLoses() {
+    endGame();
+    onPlayerLoss();
+}
+
+/**
+ * Cleans up this state
+ */
 function endGame() {
     removeEvents();
     
@@ -123,7 +139,7 @@ function getFreeColours(num) {
     return colours;
 }
 
-export function addSpell(colour) {
+function addSpell(colour) {
     let spell = new Spell(colour);
     spells.push(spell);
     player.generateSpellVar();
@@ -159,7 +175,7 @@ function onMouseDown(e) {
     if (player.coordsInside(mouse.x, mouse.y) && !paused) {
         mouseType = mouseEnum.MOVE;
     } else if (spellNum != -1 && !paused) {
-        console.log(spellNum);
+        //console.log(spellNum);
         if (showSpell) {
             if (spellNum == spellShown) {
                 //toggle off
@@ -230,7 +246,7 @@ function onMouseUp(e) {
             for (let i=0;i<spells.length;i++) {
                 let spellNum = spells[i].matches(spellPoints);
                 
-                console.log(i, spellNum);
+                //console.log(i, spellNum);
                 
                 if (spellNum < lowestNum) {
                     lowestNum = spellNum;
@@ -240,7 +256,7 @@ function onMouseUp(e) {
             
             //could change min accept number
             if (lowestNum < SPELL_MIN_ACCEPT) {
-                console.log("accepted - ", lowestIndex);
+                //console.log("accepted - ", lowestIndex);
                 
                 addSpellShot(lowestIndex);
             }
@@ -251,6 +267,9 @@ function onMouseUp(e) {
     
 }
 
+/**
+ * Draws the game
+ */
 function updateDraw() {
     clearCanvas();
     drawHud();
@@ -286,6 +305,9 @@ function updateDraw() {
     }
 }
 
+/**
+ * Updates all the game objects
+ */
 function updateLogic() {
     updateTime();
     
@@ -370,4 +392,4 @@ function updateLogic() {
     }
 }
 
-export {startGame, addEnemyShot, createEnemy, getFreeColours};
+export {startGame, addEnemyShot, createEnemy, getFreeColours, playerWins, playerLoses};

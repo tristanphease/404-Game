@@ -24,12 +24,15 @@ function EnemyShot(x, y, colour) {
         this.varX = 40;
     } else if (this.type === shotEnum.DIAGONAL) {
         //randomly -1 or 1
-        this.direction = Math.sign(Math.random()-0.5);
+        this.direction = Math.sign(Math.random()-0.5)*0.5;
         this.startX = x;
         this.startTime = time;
     }
 }
 
+/**
+ * Draws the enemy shot
+ */
 EnemyShot.prototype.draw = function() {
     
     let grad = context.createRadialGradient(this.x, this.y, this.radius/2, this.x, this.y, this.radius);
