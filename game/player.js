@@ -88,11 +88,4 @@ Player.prototype.collidesWith = function(enemyShot) {
     return false;
 }
 
-/**
- * Updates the player which updates all its spell shots
- */
-Player.prototype.update = function() {
-    
-}
-
 export default Player;

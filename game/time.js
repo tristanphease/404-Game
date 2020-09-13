@@ -28,13 +28,15 @@ function updateTime() {
         //alias
         let to = timeouts[i];
         if (time - to.startTime >= to.timeoutTime) {
+            //remove timeout first in case update time gets called in the function
+            timeouts.splice(i, 1);
+            i--;
+            
             if (to.parameters) {
                 to.func(...to.parameters);
             } else {
                 to.func();
             }
-            timeouts.splice(i, 1);
-            i--;
         }
     }
 }

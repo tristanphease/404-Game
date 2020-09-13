@@ -1,4 +1,4 @@
-import {player, onGameEnd, onPlayerWin, onPlayerLoss, clamp, clearCanvas, getRandomInt, roundNum, COLOURS, WIDTH, HEIGHT, setPlayerPos, convertCoords} from "./game.js";
+import {player, touch, onGameEnd, onPlayerWin, onPlayerLoss, clamp, clearCanvas, getRandomInt, roundNum, COLOURS, WIDTH, HEIGHT, setPlayerPos, convertCoords} from "./game.js";
 import Point from "./point.js";
 import {drawHud, insideSpell, insidePause, drawOutline, HUD_WIDTH} from "./hud.js";
 import SpellShot from "./spellshot.js";
@@ -23,13 +23,13 @@ var spellShown;
 const SPELL_MIN_ACCEPT = 50;
 //useful to export for the hud
 export const PLAYER_SEPARATOR = 400;
-export var spells = [];
+export var spells;
 
 const MAX_ENEMIES = 10;
 
 var enemies;
 
-var enemyShots ;
+var enemyShots;
 
 var spellShots;
 
@@ -38,6 +38,12 @@ export var boss;
 
 var playing;
 var paused;
+
+var mouse;
+
+function initGameState() {
+    spells = [];
+}
 
 function initVars() {
     enemies = [];
@@ -153,22 +159,38 @@ function addSpellShot(index) {
 }
 
 function addEvents() {
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    if (!touch) {
+        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    } else {
+        document.addEventListener("touchstart", onMouseDown);
+        document.addEventListener("touchmove", onMouseMove);
+        document.addEventListener("touchend", onMouseUp);
+    }
 }
 
 function removeEvents() {
-    document.removeEventListener("mousedown", onMouseDown);
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
+    if (!touch) {
+        document.removeEventListener("mousedown", onMouseDown);
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+    } else {
+        document.removeEventListener("touchstart", onMouseDown);
+        document.removeEventListener("touchmove", onMouseMove);
+        document.removeEventListener("touchend", onMouseUp);
+    }
 }
 
 
 function onMouseDown(e) {
     mouseDown = true;
     
-    let mouse = convertCoords(e.offsetX, e.offsetY);
+    if (e instanceof MouseEvent) {
+        mouse = convertCoords(e.offsetX, e.offsetY);
+    } else if (e instanceof TouchEvent) {
+        mouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    }
     
     let spellNum = insideSpell(mouse.x, mouse.y);
     
@@ -208,11 +230,18 @@ function onMouseDown(e) {
 }
 
 function onMouseMove(e) {
-    let mouse = convertCoords(e.offsetX, e.offsetY);
-    
-    let movement = convertCoords(e.movementX, e.movementY);
-    
     if (mouseDown) {
+        let newMouse;
+        if (e instanceof MouseEvent) {
+            newMouse = convertCoords(e.offsetX, e.offsetY);
+        } else if (e instanceof TouchEvent) {
+            newMouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+    
+        let movement = {x: newMouse.x - mouse.x, y: newMouse.y - mouse.y};
+        
+        mouse = newMouse;
+        
         switch (mouseType) {
             case mouseEnum.MOVE:
                 movePlayer(movement.x, movement.y);
@@ -231,7 +260,7 @@ function movePlayer(dX, dY) {
 
 function onMouseUp(e) {
     
-    //let mouse = convertCoords(e.offsetX, e.offsetY);
+    mouse = convertCoords(e.offsetX, e.offsetY);
     
     mouseDown = false;
     
@@ -311,8 +340,6 @@ function updateDraw() {
 function updateLogic() {
     updateTime();
     
-    player.update();
-    
     //check collisions
     for (let i=0;i<enemyShots.length;i++) {
         if (player.collidesWith(enemyShots[i])) {
@@ -329,16 +356,16 @@ function updateLogic() {
         for (let j=0;j<spellShots.length;j++) {
             if (enemies[i].collidesWith(spellShots[j])) {
                 
+                //remove spellshot
+                spellShots.splice(j, 1);
+                j--;
+                
                 //check if enemy is dead
                 if (!enemies[i].alive) {
                     enemies.splice(i, 1);
                     i--;
                     break;
                 }
-                
-                //remove spellshot
-                spellShots.splice(j, 1);
-                j--;
             }
         }
     }
@@ -392,4 +419,4 @@ function updateLogic() {
     }
 }
 
-export {startGame, addEnemyShot, createEnemy, getFreeColours, playerWins, playerLoses};
+export {startGame, addEnemyShot, createEnemy, initGameState, getFreeColours, playerWins, playerLoses};

@@ -215,13 +215,15 @@ function updateTime() {
         //alias
         let to = timeouts[i];
         if (time - to.startTime >= to.timeoutTime) {
+            //remove timeout first in case update time gets called in the function
+            timeouts.splice(i, 1);
+            i--;
+            
             if (to.parameters) {
                 to.func(...to.parameters);
             } else {
                 to.func();
             }
-            timeouts.splice(i, 1);
-            i--;
         }
     }
 }
@@ -1002,8 +1004,8 @@ Boss.prototype.draw = function() {
     } else if (this.currentStage === BOSS_STAGE_ENUM.DEAD) {
         //draw boss death animation
         
-        let xRad = this.width * (this.startTime - time + this.animTime) / animTime;
-        let yRad = this.height * (this.startTime - time + this.animTime) / animTime;
+        let xRad = this.width * (this.startTime - time + this.animTime) / this.animTime;
+        let yRad = this.height * (this.startTime - time + this.animTime) / this.animTime;
         
         context.save();
         
@@ -1145,7 +1147,7 @@ Boss.prototype.changeAction = function(newAction) {
                     this.points.push(new BossPoint(x, y, radius, colour, this));
                 }
                 
-                startTimeout(this.changeAction.bind(this), 10000, BOSS_AI_ENUM.MOVE);
+                startTimeout(this.changeAction.bind(this), 50000, BOSS_AI_ENUM.MOVE);
                 
                 break;
         }
@@ -1413,17 +1415,22 @@ var wrapperX, inputX;
 var wrapperY, inputY;
 var wrapperSize, inputSize;
 var wrapperAlpha, inputAlpha;
+var wrapperFullscreen;
+
+var fullscreen = false;
 
 function startOptions() {
     startInputs();
     setInputPositions();
     hideOptions();
+    
+    document.body.addEventListener("fullscreenchange", onFullscreenChange);
 }
 
 function drawOptions() {
     
     let rectWidth = WIDTH/3;
-    let rectHeight = HEIGHT/3;
+    let rectHeight = HEIGHT/3+120;
     
     let x = WIDTH/2 - rectWidth/2;
     let y = HEIGHT/2 - rectHeight/2;
@@ -1434,6 +1441,7 @@ function drawOptions() {
     wrapperY.style.display = "block";
     wrapperSize.style.display = "block";
     wrapperAlpha.style.display = "block";
+    wrapperFullscreen.style.display = "block";
     
     //draws rounded rectangle
     //goes from top left around the rectangle
@@ -1465,6 +1473,7 @@ function hideOptions() {
     wrapperY.style.display = "none";
     wrapperSize.style.display = "none";
     wrapperAlpha.style.display = "none";
+    wrapperFullscreen.style.display = "none";
 }
 
 function startInputs() {
@@ -1483,6 +1492,46 @@ function startInputs() {
     let alpha = createNumSlider(0, 1, outlineAlpha, 0.1, "inputAlpha", "Outline Opacity:");
     inputAlpha = alpha.input;
     wrapperAlpha = alpha.wrapper;
+    
+    let fullscreen = createCheckbox(toggleFullscreen, "fullscreen", "Fullscreen:");
+    wrapperFullscreen = fullscreen.wrapper;
+    
+}
+
+function onFullscreenChange(e) {
+    if (document.fullscreenElement === document.body) {
+        fullscreen = true;
+    } else {
+        fullscreen = false;
+    }
+}
+
+function toggleFullscreen() {
+    if (fullscreen) {
+        document.exitFullscreen();
+    } else {
+        document.body.requestFullscreen();
+    }
+    fullscreen = !fullscreen;
+}
+
+function createCheckbox(oninput, id, labelText) {
+    let wrapper = document.createElement("DIV");
+    wrapper.style.position = "absolute";
+    document.body.appendChild(wrapper);
+    
+    let label = document.createElement("LABEL");
+    label.htmlFor = id;
+    label.innerHTML = labelText;
+    wrapper.appendChild(label);
+    
+    let check = document.createElement("INPUT");
+    check.type = "checkbox";
+    check.oninput = oninput;
+    check.id = id;
+    wrapper.appendChild(check);
+    
+    return {wrapper, check};
 }
 
 function setInputPositions() {
@@ -1490,6 +1539,7 @@ function setInputPositions() {
     setWrapperPos(wrapperY, WIDTH/2-200, HEIGHT/2+40);
     setWrapperPos(wrapperSize, WIDTH/2+20, HEIGHT/2-40);
     setWrapperPos(wrapperAlpha, WIDTH/2+20, HEIGHT/2+40);
+    setWrapperPos(wrapperFullscreen, WIDTH/2-100, HEIGHT/2+120);
 }
 
 function setWrapperPos(wrapper, x, y) {
@@ -1540,6 +1590,8 @@ var playing;
 var doors;
 
 var doorColour;
+
+var mouse;
 
 function initVars() {
     doors = [];
@@ -1600,15 +1652,27 @@ function endDoor() {
 }
 
 function addEvents() {
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    if (!touch) {
+        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    } else {
+        document.addEventListener("touchstart", onMouseDown);
+        document.addEventListener("touchmove", onMouseMove);
+        document.addEventListener("touchend", onMouseUp);
+    }
 }
 
 function removeEvents() {
-    document.removeEventListener("mousedown", onMouseDown);
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
+    if (!touch) {
+        document.removeEventListener("mousedown", onMouseDown);
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+    } else {
+        document.removeEventListener("touchstart", onMouseDown);
+        document.removeEventListener("touchmove", onMouseMove);
+        document.removeEventListener("touchend", onMouseUp);
+    }
 }
 
 /**
@@ -1617,7 +1681,11 @@ function removeEvents() {
 function onMouseDown(e) {
     mouseDown = true;
     
-    let mouse = convertCoords(e.offsetX, e.offsetY);
+    if (e instanceof MouseEvent) {
+        mouse = convertCoords(e.offsetX, e.offsetY);
+    } else if (e instanceof TouchEvent) {
+        mouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    }
     
     //can only move player in door mode
     if (player.coordsInside(mouse.x, mouse.y) && !paused$1) {
@@ -1637,9 +1705,19 @@ function onMouseDown(e) {
 }
 
 function onMouseMove(e) {
-    let movement = convertCoords(e.movementX, e.movementY);
     
     if (mouseDown && mouseType === mouseEnum.MOVE) {
+        let newMouse;
+        if (e instanceof MouseEvent) {
+            newMouse = convertCoords(e.offsetX, e.offsetY);
+        } else if (e instanceof TouchEvent) {
+            newMouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+    
+        let movement = {x: newMouse.x - mouse.x, y: newMouse.y - mouse.y};
+        
+        mouse = newMouse;
+        
         movePlayer(movement.x, movement.y);
         
         for (let i=0;i<doors.length;i++) {
@@ -1714,13 +1792,13 @@ var spellShown;
 const SPELL_MIN_ACCEPT = 50;
 //useful to export for the hud
 const PLAYER_SEPARATOR = 400;
-var spells = [];
+var spells;
 
 const MAX_ENEMIES = 10;
 
 var enemies;
 
-var enemyShots ;
+var enemyShots;
 
 var spellShots;
 
@@ -1729,6 +1807,12 @@ var boss;
 
 var playing$1;
 var paused$2;
+
+var mouse$1;
+
+function initGameState() {
+    spells = [];
+}
 
 function initVars$1() {
     enemies = [];
@@ -1844,26 +1928,42 @@ function addSpellShot(index) {
 }
 
 function addEvents$1() {
-    document.addEventListener("mousedown", onMouseDown$1);
-    document.addEventListener("mousemove", onMouseMove$1);
-    document.addEventListener("mouseup", onMouseUp$1);
+    if (!touch) {
+        document.addEventListener("mousedown", onMouseDown$1);
+        document.addEventListener("mousemove", onMouseMove$1);
+        document.addEventListener("mouseup", onMouseUp$1);
+    } else {
+        document.addEventListener("touchstart", onMouseDown$1);
+        document.addEventListener("touchmove", onMouseMove$1);
+        document.addEventListener("touchend", onMouseUp$1);
+    }
 }
 
 function removeEvents$1() {
-    document.removeEventListener("mousedown", onMouseDown$1);
-    document.removeEventListener("mousemove", onMouseMove$1);
-    document.removeEventListener("mouseup", onMouseUp$1);
+    if (!touch) {
+        document.removeEventListener("mousedown", onMouseDown$1);
+        document.removeEventListener("mousemove", onMouseMove$1);
+        document.removeEventListener("mouseup", onMouseUp$1);
+    } else {
+        document.removeEventListener("touchstart", onMouseDown$1);
+        document.removeEventListener("touchmove", onMouseMove$1);
+        document.removeEventListener("touchend", onMouseUp$1);
+    }
 }
 
 
 function onMouseDown$1(e) {
     mouseDown$1 = true;
     
-    let mouse = convertCoords(e.offsetX, e.offsetY);
+    if (e instanceof MouseEvent) {
+        mouse$1 = convertCoords(e.offsetX, e.offsetY);
+    } else if (e instanceof TouchEvent) {
+        mouse$1 = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    }
     
-    let spellNum = insideSpell(mouse.x, mouse.y);
+    let spellNum = insideSpell(mouse$1.x, mouse$1.y);
     
-    if (player.coordsInside(mouse.x, mouse.y) && !paused$2) {
+    if (player.coordsInside(mouse$1.x, mouse$1.y) && !paused$2) {
         mouseType$1 = mouseEnum$1.MOVE;
     } else if (spellNum != -1 && !paused$2) {
         //console.log(spellNum);
@@ -1880,7 +1980,7 @@ function onMouseDown$1(e) {
             showSpell = true;
             spellShown = spellNum;
         }
-    } else if (insidePause(mouse.x, mouse.y)) {
+    } else if (insidePause(mouse$1.x, mouse$1.y)) {
         if (!paused$2) {
             paused$2 = true;
             clearInterval(updateInterval$1);
@@ -1894,22 +1994,29 @@ function onMouseDown$1(e) {
     } else if (!paused$2) {
         mouseType$1 = mouseEnum$1.SPELL;
         spellPoints = [];
-        spellPoints.push(new Point(mouse.x, mouse.y));
+        spellPoints.push(new Point(mouse$1.x, mouse$1.y));
     }
 }
 
 function onMouseMove$1(e) {
-    let mouse = convertCoords(e.offsetX, e.offsetY);
-    
-    let movement = convertCoords(e.movementX, e.movementY);
-    
     if (mouseDown$1) {
+        let newMouse;
+        if (e instanceof MouseEvent) {
+            newMouse = convertCoords(e.offsetX, e.offsetY);
+        } else if (e instanceof TouchEvent) {
+            newMouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+    
+        let movement = {x: newMouse.x - mouse$1.x, y: newMouse.y - mouse$1.y};
+        
+        mouse$1 = newMouse;
+        
         switch (mouseType$1) {
             case mouseEnum$1.MOVE:
                 movePlayer$1(movement.x, movement.y);
                 break;
             case mouseEnum$1.SPELL:
-                spellPoints.push(new Point(mouse.x, mouse.y));
+                spellPoints.push(new Point(mouse$1.x, mouse$1.y));
                 break;
         }
     }
@@ -1922,7 +2029,7 @@ function movePlayer$1(dX, dY) {
 
 function onMouseUp$1(e) {
     
-    //let mouse = convertCoords(e.offsetX, e.offsetY);
+    mouse$1 = convertCoords(e.offsetX, e.offsetY);
     
     mouseDown$1 = false;
     
@@ -2002,8 +2109,6 @@ function updateDraw$1() {
 function updateLogic$1() {
     updateTime();
     
-    player.update();
-    
     //check collisions
     for (let i=0;i<enemyShots.length;i++) {
         if (player.collidesWith(enemyShots[i])) {
@@ -2020,16 +2125,16 @@ function updateLogic$1() {
         for (let j=0;j<spellShots.length;j++) {
             if (enemies[i].collidesWith(spellShots[j])) {
                 
+                //remove spellshot
+                spellShots.splice(j, 1);
+                j--;
+                
                 //check if enemy is dead
                 if (!enemies[i].alive) {
                     enemies.splice(i, 1);
                     i--;
                     break;
                 }
-                
-                //remove spellshot
-                spellShots.splice(j, 1);
-                j--;
             }
         }
     }
@@ -2167,13 +2272,6 @@ Player.prototype.collidesWith = function(enemyShot) {
         return true;
     }
     return false;
-};
-
-/**
- * Updates the player which updates all its spell shots
- */
-Player.prototype.update = function() {
-    
 };
 
 const MENUSTATE = {START: 0, WIN: 1, LOSE: 2};
@@ -2351,6 +2449,8 @@ const HEIGHT = 695;
 
 const RATIO = WIDTH / HEIGHT;
 
+var touch = false;
+
 /**
  * Starts the game
  */
@@ -2366,6 +2466,8 @@ function start(canvas2d) {
     
     generateGlitchPattern();
     
+    touch = (("ontouchstart" in window) || (navigator.msMaxTouchPoints > 0));
+    
     resize();
     
     window.addEventListener("resize", resize);
@@ -2378,6 +2480,8 @@ function start(canvas2d) {
 
 function initGame() {
     player = new Player();
+    
+    initGameState();
     
     startTime();
     
@@ -2520,4 +2624,4 @@ function clamp(value, lower, upper) {
     return value;
 }
 
-export { COLOURS, GLITCH_PALETTE, HEIGHT, WIDTH, canvas, clamp, clearCanvas, context, convertCoords, convertCoordsBack, gameEnum, gameState, getRandomInt, glitchPattern, initGame, onDoorEnd, onGameEnd, onMenuEnd, onPlayerLoss, onPlayerWin, player, roundNum, setPlayerPos, start };
+export { COLOURS, GLITCH_PALETTE, HEIGHT, WIDTH, canvas, clamp, clearCanvas, context, convertCoords, convertCoordsBack, gameEnum, gameState, getRandomInt, glitchPattern, initGame, onDoorEnd, onGameEnd, onMenuEnd, onPlayerLoss, onPlayerWin, player, roundNum, setPlayerPos, start, touch };

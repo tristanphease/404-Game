@@ -80,8 +80,8 @@ Boss.prototype.draw = function() {
     } else if (this.currentStage === BOSS_STAGE_ENUM.DEAD) {
         //draw boss death animation
         
-        let xRad = this.width * (this.startTime - time + this.animTime) / animTime;
-        let yRad = this.height * (this.startTime - time + this.animTime) / animTime;
+        let xRad = this.width * (this.startTime - time + this.animTime) / this.animTime;
+        let yRad = this.height * (this.startTime - time + this.animTime) / this.animTime;
         
         context.save();
         
@@ -223,7 +223,7 @@ Boss.prototype.changeAction = function(newAction) {
                     this.points.push(new BossPoint(x, y, radius, colour, this));
                 }
                 
-                startTimeout(this.changeAction.bind(this), 10000, BOSS_AI_ENUM.MOVE);
+                startTimeout(this.changeAction.bind(this), 50000, BOSS_AI_ENUM.MOVE);
                 
                 break;
         }

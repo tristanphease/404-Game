@@ -1,5 +1,5 @@
 import Player from "./player.js";
-import {startGame} from "./gamestate.js";
+import {startGame, initGameState} from "./gamestate.js";
 import {startDoor} from "./doorstate.js";
 import {MENUSTATE, startMenu} from "./menustate.js";
 import {HUD_WIDTH, initHud} from "./hud.js";
@@ -27,6 +27,8 @@ export const HEIGHT = 695;
 
 const RATIO = WIDTH / HEIGHT;
 
+export var touch = false;
+
 /**
  * Starts the game
  */
@@ -42,6 +44,8 @@ function start(canvas2d) {
     
     generateGlitchPattern();
     
+    touch = (("ontouchstart" in window) || (navigator.msMaxTouchPoints > 0));
+    
     resize();
     
     window.addEventListener("resize", resize);
@@ -54,6 +58,8 @@ function start(canvas2d) {
 
 function initGame() {
     player = new Player();
+    
+    initGameState();
     
     startTime();
     

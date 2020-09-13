@@ -5,17 +5,22 @@ var wrapperX, inputX;
 var wrapperY, inputY;
 var wrapperSize, inputSize;
 var wrapperAlpha, inputAlpha;
+var wrapperFullscreen, inputFullscreen;
+
+var fullscreen = false;
 
 function startOptions() {
     startInputs();
     setInputPositions();
     hideOptions();
+    
+    document.body.addEventListener("fullscreenchange", onFullscreenChange);
 }
 
 function drawOptions() {
     
     let rectWidth = WIDTH/3;
-    let rectHeight = HEIGHT/3;
+    let rectHeight = HEIGHT/3+120;
     
     let x = WIDTH/2 - rectWidth/2;
     let y = HEIGHT/2 - rectHeight/2;
@@ -26,6 +31,7 @@ function drawOptions() {
     wrapperY.style.display = "block";
     wrapperSize.style.display = "block";
     wrapperAlpha.style.display = "block";
+    wrapperFullscreen.style.display = "block";
     
     //draws rounded rectangle
     //goes from top left around the rectangle
@@ -57,6 +63,7 @@ function hideOptions() {
     wrapperY.style.display = "none";
     wrapperSize.style.display = "none";
     wrapperAlpha.style.display = "none";
+    wrapperFullscreen.style.display = "none";
 }
 
 function startInputs() {
@@ -75,6 +82,47 @@ function startInputs() {
     let alpha = createNumSlider(0, 1, outlineAlpha, 0.1, "inputAlpha", "Outline Opacity:");
     inputAlpha = alpha.input;
     wrapperAlpha = alpha.wrapper;
+    
+    let fullscreen = createCheckbox(toggleFullscreen, "fullscreen", "Fullscreen:");
+    inputFullscreen = fullscreen.input;
+    wrapperFullscreen = fullscreen.wrapper;
+    
+}
+
+function onFullscreenChange(e) {
+    if (document.fullscreenElement === document.body) {
+        fullscreen = true;
+    } else {
+        fullscreen = false;
+    }
+}
+
+function toggleFullscreen() {
+    if (fullscreen) {
+        document.exitFullscreen();
+    } else {
+        document.body.requestFullscreen();
+    }
+    fullscreen = !fullscreen;
+}
+
+function createCheckbox(oninput, id, labelText) {
+    let wrapper = document.createElement("DIV");
+    wrapper.style.position = "absolute";
+    document.body.appendChild(wrapper);
+    
+    let label = document.createElement("LABEL");
+    label.htmlFor = id;
+    label.innerHTML = labelText;
+    wrapper.appendChild(label);
+    
+    let check = document.createElement("INPUT");
+    check.type = "checkbox";
+    check.oninput = oninput;
+    check.id = id;
+    wrapper.appendChild(check);
+    
+    return {wrapper, check};
 }
 
 function setInputPositions() {
@@ -82,6 +130,7 @@ function setInputPositions() {
     setWrapperPos(wrapperY, WIDTH/2-200, HEIGHT/2+40);
     setWrapperPos(wrapperSize, WIDTH/2+20, HEIGHT/2-40);
     setWrapperPos(wrapperAlpha, WIDTH/2+20, HEIGHT/2+40);
+    setWrapperPos(wrapperFullscreen, WIDTH/2-100, HEIGHT/2+120);
 }
 
 function setWrapperPos(wrapper, x, y) {

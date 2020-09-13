@@ -1,4 +1,4 @@
-import {player, roundNum, onDoorEnd, clamp, clearCanvas, getRandomInt, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
+import {player, touch, roundNum, onDoorEnd, clamp, clearCanvas, getRandomInt, WIDTH, HEIGHT, convertCoords, setPlayerPos} from "./game.js";
 import {getFreeColours} from "./gamestate.js";
 import {drawHud, insidePause, HUD_WIDTH} from "./hud.js";
 import {restartTime, pauseTime, updateTime} from "./time.js";
@@ -17,6 +17,8 @@ var playing;
 var doors;
 
 export var doorColour;
+
+var mouse;
 
 function initVars() {
     doors = [];
@@ -77,15 +79,27 @@ function endDoor() {
 }
 
 function addEvents() {
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    if (!touch) {
+        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    } else {
+        document.addEventListener("touchstart", onMouseDown);
+        document.addEventListener("touchmove", onMouseMove);
+        document.addEventListener("touchend", onMouseUp);
+    }
 }
 
 function removeEvents() {
-    document.removeEventListener("mousedown", onMouseDown);
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
+    if (!touch) {
+        document.removeEventListener("mousedown", onMouseDown);
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+    } else {
+        document.removeEventListener("touchstart", onMouseDown);
+        document.removeEventListener("touchmove", onMouseMove);
+        document.removeEventListener("touchend", onMouseUp);
+    }
 }
 
 /**
@@ -94,7 +108,11 @@ function removeEvents() {
 function onMouseDown(e) {
     mouseDown = true;
     
-    let mouse = convertCoords(e.offsetX, e.offsetY);
+    if (e instanceof MouseEvent) {
+        mouse = convertCoords(e.offsetX, e.offsetY);
+    } else if (e instanceof TouchEvent) {
+        mouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    }
     
     //can only move player in door mode
     if (player.coordsInside(mouse.x, mouse.y) && !paused) {
@@ -114,9 +132,19 @@ function onMouseDown(e) {
 }
 
 function onMouseMove(e) {
-    let movement = convertCoords(e.movementX, e.movementY);
     
     if (mouseDown && mouseType === mouseEnum.MOVE) {
+        let newMouse;
+        if (e instanceof MouseEvent) {
+            newMouse = convertCoords(e.offsetX, e.offsetY);
+        } else if (e instanceof TouchEvent) {
+            newMouse = convertCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }
+    
+        let movement = {x: newMouse.x - mouse.x, y: newMouse.y - mouse.y};
+        
+        mouse = newMouse;
+        
         movePlayer(movement.x, movement.y);
         
         for (let i=0;i<doors.length;i++) {
